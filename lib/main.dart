@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:sizer/sizer.dart'; 
 import 'data/models/anime_model.dart';
 import 'data/repositories/anime_repository.dart';
 import 'logic/cubit/favorite_cubit.dart';
 import 'logic/cubit/top_anime_cubit.dart';
-import 'presentation/screens/main_screen.dart'; 
+import 'presentation/navigation/app_router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); 
@@ -35,15 +36,19 @@ class MyApp extends StatelessWidget {
               ..loadFavorites(),
           ),
         ],
-        child: MaterialApp(
-          debugShowCheckedModeBanner: false, 
-          title: 'Top Anime (Cubit + Dio)',
-          theme: ThemeData(
-            primarySwatch: Colors.cyan,
-            brightness: Brightness.dark,
-          ),
-
-          home: const MainScreen(),   
+        
+        child: Sizer( // <-- BUNGKUS DENGAN SIZER
+          builder: (context, orientation, deviceType) {
+            return MaterialApp.router(
+              debugShowCheckedModeBanner: false, 
+              title: 'Streamimer',
+              theme: ThemeData(
+                primarySwatch: Colors.cyan,
+                brightness: Brightness.dark,
+              ),
+              routerConfig: appRouter, 
+            );
+          },
         ),
       ),
     );

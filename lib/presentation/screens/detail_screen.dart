@@ -1,6 +1,7 @@
 // lib/presentation/screens/detail_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:sizer/sizer.dart'; // <-- IMPORT SIZER
 import '../../data/models/anime_model.dart';
 import '../../data/repositories/anime_repository.dart';
 import '../../logic/cubit/anime_detail_cubit.dart';
@@ -18,46 +19,36 @@ class DetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Sediakan Cubit khusus untuk halaman ini
     return BlocProvider(
       create: (context) => AnimeDetailCubit(
         context.read<AnimeRepository>(),
-      )..fetchAnimeDetail(animeId), // Langsung panggil fetch detail
+      )..fetchAnimeDetail(animeId), 
       
-      // Kita pakai BlocBuilder di root agar bisa update AppBar
       child: BlocBuilder<AnimeDetailCubit, AnimeDetailState>(
         builder: (context, state) {
           
-          // Ambil judul dari state jika sukses, atau dari parameter jika loading
           final String title = (state is AnimeDetailSuccess) ? state.anime.title : animeTitle;
 
           return Scaffold(
             appBar: AppBar(
               title: Text(title),
               actions: [
-                // Hanya tampilkan tombol Hati jika data anime sudah loaded
                 if (state is AnimeDetailSuccess)
-                  // Gunakan BlocBuilder KEDUA khusus untuk FavoriteCubit
                   BlocBuilder<FavoriteCubit, FavoriteState>(
                     builder: (context, favoriteState) {
-                      
                       final bool isFav = context.read<FavoriteCubit>().isFavorite(state.anime.id);
-
                       return IconButton(
                         icon: Icon(
                           isFav ? Icons.favorite : Icons.favorite_border,
                           color: isFav ? Colors.red : null,
                         ),
                         onPressed: () {
-                          // Buat AnimeModel sederhana dari AnimeDetailModel
-                          // untuk disimpan ke Hive
                           final animeAsModel = AnimeModel(
                             id: state.anime.id, 
                             title: state.anime.title, 
                             imageUrl: state.anime.imageUrl, 
                             score: state.anime.score
                           );
-                          
                           context.read<FavoriteCubit>().toggleFavorite(animeAsModel);
                         },
                       );
@@ -65,7 +56,6 @@ class DetailScreen extends StatelessWidget {
                   )
               ],
             ),
-            // Kirim state ke body
             body: _buildBody(context, state),
           );
         },
@@ -73,7 +63,7 @@ class DetailScreen extends StatelessWidget {
     );
   }
 
-  // Pisahkan body ke widget/fungsi sendiri agar lebih rapi
+  // --- SELURUH BODY DI-UPDATE DENGAN SIZER ---
   Widget _buildBody(BuildContext context, AnimeDetailState state) {
     if (state is AnimeDetailLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -82,27 +72,28 @@ class DetailScreen extends StatelessWidget {
     if (state is AnimeDetailSuccess) {
       final anime = state.anime;
       return SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(4.w), // 16.0 -> 4.w
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Center(
               child: Image.network(
                 anime.imageUrl,
-                height: 300,
+                height: 40.h, // 300 -> 40.h (40% tinggi layar)
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) =>
-                    const Icon(Icons.broken_image, size: 150),
+                    Icon(Icons.broken_image, size: 40.h),
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 2.h), // 16.0 -> 2.h
             Text(
               anime.title,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
+                    fontSize: 18.sp, // Ukuran font responsif
                   ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 1.h), // 8.0 -> 1.h
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -123,17 +114,22 @@ class DetailScreen extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 2.h),
             const Divider(),
-            const SizedBox(height: 16),
+            SizedBox(height: 2.h),
             Text(
               'Synopsis',
-              style: Theme.of(context).textTheme.titleLarge,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontSize: 16.sp, // Ukuran font responsif
+              ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 1.h),
             Text(
               anime.synopsis,
-              style: Theme.of(context).textTheme.bodyMedium,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontSize: 12.sp, // Ukuran font responsif
+                height: 1.5, // Jarak antar baris
+              ),
               textAlign: TextAlign.justify,
             ),
           ],
@@ -149,7 +145,7 @@ class DetailScreen extends StatelessWidget {
   }
 }
 
-// Widget helper kecil untuk info chip
+// --- InfoChip JUGA DI-UPDATE ---
 class InfoChip extends StatelessWidget {
   final IconData icon;
   final String text;
@@ -165,10 +161,14 @@ class InfoChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Chip(
-      avatar: Icon(icon, color: color, size: 20),
-      label: Text(text),
+      avatar: Icon(icon, color: color, size: 14.sp), // 20 -> 14.sp
+      label: Text(
+        text,
+        style: TextStyle(fontSize: 11.sp), // Ukuran font responsif
+      ),
       backgroundColor: color.withOpacity(0.1),
       side: BorderSide.none,
+      padding: EdgeInsets.symmetric(horizontal: 1.w, vertical: 0.5.h),
     );
   }
 }

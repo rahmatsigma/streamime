@@ -1,44 +1,41 @@
 // lib/presentation/screens/main_screen.dart
 
 import 'package:flutter/material.dart';
-import 'favorites_screen.dart'; // <-- Halaman baru kita
-import 'home_screen.dart';      // <-- Halaman lama kita
+import 'package:go_router/go_router.dart'; // <-- IMPORT GO_ROUTER
 
-class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+class MainScreen extends StatelessWidget {
+  // Terima 'child' (halaman aktif) dari ShellRoute
+  final Widget child;
+  
+  const MainScreen({super.key, required this.child});
 
-  @override
-  State<MainScreen> createState() => _MainScreenState();
-}
+  // Fungsi untuk mengecek index aktif berdasarkan route
+  int _calculateSelectedIndex(BuildContext context) {
+    final String location = GoRouterState.of(context).uri.toString();
+    if (location == '/favorites') {
+      return 1;
+    }
+    return 0; // Defaultnya adalah '/' (Home)
+  }
 
-class _MainScreenState extends State<MainScreen> {
-  // Index untuk melacak tab mana yang aktif
-  int _selectedIndex = 0;
-
-  // Daftar halaman/screen yang akan ditampilkan
-  static const List<Widget> _pages = <Widget>[
-    HomeScreen(),      // Tab 0
-    FavoritesScreen(), // Tab 1
-  ];
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+  // Fungsi untuk pindah tab
+  void _onItemTapped(int index, BuildContext context) {
+    switch (index) {
+      case 0:
+        context.go('/'); // Pindah ke path '/'
+        break;
+      case 1:
+        context.go('/favorites'); // Pindah ke path '/favorites'
+        break;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Body-nya adalah halaman yang kita pilih
-      // Kita pakai IndexedStack agar state halaman (posisi scroll)
-      // tidak ter-reset saat ganti tab
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _pages,
-      ),
+      // Body-nya sekarang adalah 'child' yang diberikan GoRouter
+      body: child, 
 
-      // Bottom Navigation Bar
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
@@ -50,9 +47,10 @@ class _MainScreenState extends State<MainScreen> {
             label: 'Favorites',
           ),
         ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.cyan, // Warna item aktif
-        onTap: _onItemTapped,
+        // Tentukan index aktif berdasarkan path URL
+        currentIndex: _calculateSelectedIndex(context),
+        selectedItemColor: Colors.cyan,
+        onTap: (index) => _onItemTapped(index, context), // Panggil fungsi pindah
       ),
     );
   }

@@ -1,11 +1,12 @@
-// lib/presentation/screens/home_screen.dart
-
-import 'dart:async'; // <-- Untuk Timer (Debounce)
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../logic/cubit/favorite_cubit.dart'; // <-- Import Favorite Cubit
+import 'package:go_router/go_router.dart';
+import 'package:sizer/sizer.dart';
+import '../../data/models/anime_model.dart'; 
+import '../../logic/cubit/favorite_cubit.dart';
 import '../../logic/cubit/top_anime_cubit.dart';
-import 'detail_screen.dart';
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,23 +18,17 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
   Timer? _debounce;
-
-  // Controller untuk Pagination / Infinite Scroll
   final _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    // Panggil top anime saat pertama kali load
     context.read<TopAnimeCubit>().fetchTopAnime();
-
-    // Tambahkan Listener untuk Scroll
     _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
-    // Hapus semua controller dan timer
     _searchController.dispose();
     _debounce?.cancel();
     _scrollController
@@ -42,17 +37,12 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  // Fungsi Listener Scroll
   void _onScroll() {
-    // Cek jika kita ada di paling bawah
-    // dikurangi 200px agar load sebelum mentok
     if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) { 
-      // Panggil fungsi loadMore di Cubit
       context.read<TopAnimeCubit>().loadMore();
     }
   }
   
-  // Fungsi Debounce untuk Search
   void _onSearchChanged(String query) {
     if (_debounce?.isActive ?? false) _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
@@ -60,12 +50,11 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Anime Jikan'),
+        title: const Text('Streamimer'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -78,9 +67,9 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Column(
         children: [
-          // --- SEARCH BAR ---
+          // --- SEARCH BAR (Sizer) ---
           Padding(
-            padding: const EdgeInsets.all(12.0),
+            padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
@@ -89,7 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(25.0),
                 ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 10.0),
+                contentPadding: EdgeInsets.symmetric(vertical: 1.5.h),
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.clear),
                   onPressed: (){
@@ -102,17 +91,13 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           
-          // --- HASIL LIST ---
           Expanded(
             child: BlocBuilder<TopAnimeCubit, TopAnimeState>(
               builder: (context, state) {
-                
-                // --- Loading State (Awal) ---
+              
                 if (state is TopAnimeLoading) {
                   return const Center(child: CircularProgressIndicator());
                 }
-
-                // --- Error State ---
                 if (state is TopAnimeError) {
                   return Center(
                     child: Text(
@@ -122,84 +107,206 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                 }
 
-                // --- Success State (State Utama) ---
+                // --- INI BAGIAN UTAMANYA ---
                 if (state is TopAnimeSuccess) {
                   if (state.animeList.isEmpty) {
                     return const Center(child: Text('No anime found.'));
                   }
 
-                  return ListView.builder(
-                    // Pasang ScrollController
-                    controller: _scrollController,
-                    
-                    // Tambah 1 item untuk loading indicator
-                    itemCount: state.hasReachedMax 
-                        ? state.animeList.length 
-                        : state.animeList.length + 1,
+                  // --- GUNAKAN LAYOUTBUILDER UNTUK CEK LEBAR ---
+                  return LayoutBuilder(
+                    builder: (context, constraints) {
+                      // Tentukan breakpoint. 600px adalah standar tablet
+                      bool isWide = constraints.maxWidth > 600; 
+
+                      if (isWide) {
+                        int crossAxisCount = (constraints.maxWidth / 250).floor();
                         
-                    itemBuilder: (context, index) {
-                      // Cek apakah ini item terakhir
-                      if (index >= state.animeList.length) {
-                        // Ini adalah item loading indicator
-                        return const Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(8.0),
-                            child: CircularProgressIndicator(),
+                        return GridView.builder(
+                          controller: _scrollController, // Controller tetap sama
+                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: crossAxisCount,
+                            childAspectRatio: 0.65, // Rasio item (sesuaikan)
+                            crossAxisSpacing: 2.w,
+                            mainAxisSpacing: 2.w,
                           ),
+                          padding: EdgeInsets.symmetric(horizontal: 4.w),
+                          itemCount: state.hasReachedMax 
+                              ? state.animeList.length 
+                              : state.animeList.length + 1,
+                          itemBuilder: (context, index) {
+                            if (index >= state.animeList.length) {
+                              // Loading indicator di paling bawah
+                              return const Center(child: CircularProgressIndicator());
+                            }
+                            final anime = state.animeList[index];
+                            // Tampilkan item sebagai Grid Card
+                            return _AnimeGridCard(anime: anime);
+                          },
+                        );
+                      } else {
+                        // --- TAMPILAN SEMPIT (LIST VIEW) ---
+                        // Ini adalah kode ListView kita sebelumnya
+                        return ListView.builder(
+                          controller: _scrollController,
+                          itemCount: state.hasReachedMax 
+                              ? state.animeList.length 
+                              : state.animeList.length + 1,
+                          itemBuilder: (context, index) {
+                            if (index >= state.animeList.length) {
+                              return const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.all(8.0),
+                                  child: CircularProgressIndicator(),
+                                ),
+                              );
+                            }
+                            final anime = state.animeList[index];
+                            // Tampilkan item sebagai List Tile
+                            return _AnimeListTile(anime: anime);
+                          },
                         );
                       }
-                      
-                      // Ini adalah item anime
-                      final anime = state.animeList[index];
-                      return Card(
-                        margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                        child: ListTile(
-                          leading: Image.network(
-                            anime.imageUrl,
-                            width: 50,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const Icon(Icons.broken_image),
-                          ),
-                          title: Text(anime.title),
-                          subtitle: Text('Score: ${anime.score.toString()}'),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => DetailScreen(
-                                  animeId: anime.id,
-                                  animeTitle: anime.title,
-                                ),
-                              ),
-                            );
-                          },
-
-                          // --- TOMBOL FAVORIT ---
-                          trailing: BlocBuilder<FavoriteCubit, FavoriteState>(
-                            builder: (context, favoriteState) {
-                              final isFav = context.read<FavoriteCubit>().isFavorite(anime.id);
-                              return IconButton(
-                                icon: Icon(
-                                  isFav ? Icons.favorite : Icons.favorite_border,
-                                  color: isFav ? Colors.red : null,
-                                ),
-                                onPressed: () {
-                                  // Kirim AnimeModel lengkap ke cubit
-                                  context.read<FavoriteCubit>().toggleFavorite(anime);
-                                },
-                              );
-                            },
-                          ),
-                        ),
-                      );
                     },
                   );
                 }
 
-                // --- Initial State (Default) ---
                 return const Center(
                   child: Text('Press refresh button to load anime.'),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// --- WIDGET BARU (PRIVATE) UNTUK LIST TILE ---
+// Kita pisahkan agar rapi
+class _AnimeListTile extends StatelessWidget {
+  final AnimeModel anime;
+  const _AnimeListTile({required this.anime});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: EdgeInsets.symmetric(horizontal: 2.w, vertical: 0.8.h),
+      child: ListTile(
+        leading: Image.network(
+          anime.imageUrl,
+          width: 14.w,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) =>
+              const Icon(Icons.broken_image),
+        ),
+        title: Text(anime.title, maxLines: 2, overflow: TextOverflow.ellipsis),
+        subtitle: Text('Score: ${anime.score.toString()}'),
+        onTap: () {
+          context.go('/detail/${anime.id}', extra: anime.title);
+        },
+        trailing: BlocBuilder<FavoriteCubit, FavoriteState>(
+          builder: (context, favoriteState) {
+            final isFav = context.read<FavoriteCubit>().isFavorite(anime.id);
+            return IconButton(
+              icon: Icon(
+                isFav ? Icons.favorite : Icons.favorite_border,
+                color: isFav ? Colors.red : null,
+              ),
+              onPressed: () {
+                context.read<FavoriteCubit>().toggleFavorite(anime);
+              },
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _AnimeGridCard extends StatelessWidget {
+  final AnimeModel anime;
+  const _AnimeGridCard({required this.anime});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      clipBehavior: Clip.antiAlias, // Biar gambar rapi
+      child: Stack(
+        children: [
+          // Konten utama
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: Image.network(
+                  anime.imageUrl,
+                  // HAPUS height: 25.h
+                  fit: BoxFit.cover, // fit: cover penting
+                  errorBuilder: (context, error, stackTrace) =>
+                      // Ganti SizedBox dengan Container/Icon di tengah
+                      Container(
+                    color: Colors.grey[850],
+                    child: Center(
+                      child: Icon(Icons.broken_image, size: 8.w),
+                    ),
+                  ),
+                ),
+              ),
+              // --- PERBAIKAN SELESAI ---
+              
+              // Judul & Score
+              Padding(
+                padding: EdgeInsets.all(2.w),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      anime.title,
+                      style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.bold),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: 0.5.h),
+                    Text(
+                      'Score: ${anime.score.toString()}',
+                      style: TextStyle(fontSize: 10.sp, color: Colors.grey[400]),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          // Tombol tap (full)
+          Positioned.fill(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  context.go('/detail/${anime.id}', extra: anime.title);
+                },
+              ),
+            ),
+          ),
+          // Tombol favorit (kanan atas)
+          Positioned(
+            top: 0,
+            right: 0,
+            child: BlocBuilder<FavoriteCubit, FavoriteState>(
+              builder: (context, favoriteState) {
+                final isFav = context.read<FavoriteCubit>().isFavorite(anime.id);
+                return IconButton(
+                  icon: Icon(
+                    isFav ? Icons.favorite : Icons.favorite_border,
+                    color: isFav ? Colors.red : Colors.white,
+                  ),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.black.withOpacity(0.5)
+                  ),
+                  onPressed: () {
+                    context.read<FavoriteCubit>().toggleFavorite(anime);
+                  },
                 );
               },
             ),
