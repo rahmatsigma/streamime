@@ -12,10 +12,10 @@ class DetailScreen extends StatelessWidget {
   final String animeTitle;
 
   const DetailScreen({
-    Key? key,
+    super.key,
     required this.animeId,
     required this.animeTitle,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -152,11 +152,11 @@ class InfoChip extends StatelessWidget {
   final Color color;
 
   const InfoChip({
-    Key? key,
+    super.key,
     required this.icon,
     required this.text,
     required this.color,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
