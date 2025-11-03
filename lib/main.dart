@@ -41,7 +41,7 @@ class MyApp extends StatelessWidget {
           builder: (context, orientation, deviceType) {
             return MaterialApp.router(
               debugShowCheckedModeBanner: false, 
-              title: 'Streamimer',
+              title: 'Streamime',
               theme: ThemeData(
                 primarySwatch: Colors.cyan,
                 brightness: Brightness.dark,

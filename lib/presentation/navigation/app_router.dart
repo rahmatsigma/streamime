@@ -5,15 +5,21 @@ import 'package:go_router/go_router.dart';
 import '../screens/detail_screen.dart';
 import '../screens/favorites_screen.dart';
 import '../screens/home_screen.dart';
-import '../screens/main_screen.dart'; // Wadah BottomNavBar
+import '../screens/main_screen.dart';
+import '../screens/splash_screen.dart'; 
 
 // Key unik untuk ShellRoute (BottomNavBar)
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: '/', // Mulai dari path '/' (HomeScreen)
+  initialLocation: '/splash', // Mulai dari path '/splash' (SplashScreen)
 
   routes: [
+
+    GoRoute(
+      path: '/splash',
+      builder: (context, state) => const SplashScreen(),
+    ),
     // --- SHELL ROUTE (Untuk Halaman dengan BottomNavBar) ---
     // Ini adalah rute "wadah" yang akan selalu menampilkan MainScreen (BottomNavBar)
     ShellRoute(
