@@ -1,10 +1,9 @@
-// lib/presentation/screens/detail_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sizer/sizer.dart';
-import 'package:go_router/go_router.dart';
+import 'package:go_router/go_router.dart'; 
 import '../../data/models/anime_model.dart';
-import '../../data/repositories/anime_repository.dart'; // fkjgfekgfe
+import '../../data/repositories/anime_repository.dart';
 import '../../logic/cubit/anime_detail_cubit.dart';
 import '../../logic/cubit/favorite_cubit.dart';
 
@@ -25,52 +24,57 @@ class DetailScreen extends StatelessWidget {
         context.read<AnimeRepository>(),
       )..fetchAnimeDetail(animeId), 
       
-      child: BlocBuilder<AnimeDetailCubit, AnimeDetailState>(
-        builder: (context, state) {
-          
-          final String title = (state is AnimeDetailSuccess) ? state.anime.title : animeTitle;
+      child: Builder(
+        builder: (context) { 
+          return BlocBuilder<AnimeDetailCubit, AnimeDetailState>(
+            builder: (context, state) {
+              
+              final String title = (state is AnimeDetailSuccess) ? state.anime.title : animeTitle;
 
-          return Scaffold(
-            appBar: AppBar(
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: (){
-                  context.go('/HomeScreen');
-                }
-              ),
-              title: Text(title),
-              actions: [
-                if (state is AnimeDetailSuccess)
-                  BlocBuilder<FavoriteCubit, FavoriteState>(
-                    builder: (context, favoriteState) {
-                      final bool isFav = context.read<FavoriteCubit>().isFavorite(state.anime.id);
-                      return IconButton(
-                        icon: Icon(
-                          isFav ? Icons.favorite : Icons.favorite_border,
-                          color: isFav ? Colors.red : null,
-                        ),
-                        onPressed: () {
-                          final animeAsModel = AnimeModel(
-                            id: state.anime.id, 
-                            title: state.anime.title, 
-                            imageUrl: state.anime.imageUrl, 
-                            score: state.anime.score
+              return Scaffold(
+                appBar: AppBar(
+                  leading: IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: (){
+                      context.go('/'); 
+                    }
+                  ),
+
+                  title: Text(title),
+                  actions: [
+                    if (state is AnimeDetailSuccess)
+                      BlocBuilder<FavoriteCubit, FavoriteState>(
+                        builder: (context, favoriteState) {
+                          final bool isFav = context.read<FavoriteCubit>().isFavorite(state.anime.id);
+                          return IconButton(
+                            icon: Icon(
+                              isFav ? Icons.favorite : Icons.favorite_border,
+                              color: isFav ? Colors.red : null,
+                            ),
+                            onPressed: () {
+                              final animeAsModel = AnimeModel(
+                                id: state.anime.id, 
+                                title: state.anime.title, 
+                                imageUrl: state.anime.imageUrl, 
+                                score: state.anime.score
+                              );
+                              context.read<FavoriteCubit>().toggleFavorite(animeAsModel);
+                            },
                           );
-                          context.read<FavoriteCubit>().toggleFavorite(animeAsModel);
                         },
-                      );
-                    },
-                  )
-              ],
-            ),
-            body: _buildBody(context, state),
+                      )
+                  ],
+                ),
+                body: _buildBody(context, state),
+              );
+            },
           );
-        },
+        }
       ),
     );
   }
 
-  // --- SELURUH BODY DI-UPDATE DENGAN SIZER ---
+
   Widget _buildBody(BuildContext context, AnimeDetailState state) {
     if (state is AnimeDetailLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -87,31 +91,32 @@ class DetailScreen extends StatelessWidget {
           ),
         ),
         child: SingleChildScrollView(
-          padding: EdgeInsets.all(4.w), // 16.0 -> 4.w
+          padding: EdgeInsets.all(4.w),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Center(
-                child: Hero(
+                child: Hero( 
                   tag: 'anime-${anime.id}',
                   child: Image.network(
                     anime.imageUrl,
-                    height: 40.h, // 300 -> 40.h (40% tinggi layar)
+                    height: 40.h,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) =>
                         Icon(Icons.broken_image, size: 40.h),
                   ),
                 ),
               ),
-              SizedBox(height: 2.h), // 16.0 -> 2.h
+              SizedBox(height: 2.h),
               Text(
                 anime.title,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,
-                      fontSize: 18.sp, // Ukuran font responsif
+                      fontSize: 18.sp, 
+                      color: Colors.white,
                     ),
               ),
-              SizedBox(height: 1.h), // 8.0 -> 1.h
+              SizedBox(height: 1.h), 
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -138,15 +143,17 @@ class DetailScreen extends StatelessWidget {
               Text(
                 'Synopsis',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontSize: 16.sp, // Ukuran font responsif
+                  fontSize: 16.sp,
+                  color: Colors.white, 
                 ),
               ),
               SizedBox(height: 1.h),
               Text(
                 anime.synopsis,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontSize: 12.sp, // Ukuran font responsif
-                  height: 1.5, // Jarak antar baris
+                  fontSize: 12.sp,
+                  height: 1.5,
+                  color: Colors.white70, 
                 ),
                 textAlign: TextAlign.justify,
               ),
@@ -164,7 +171,7 @@ class DetailScreen extends StatelessWidget {
   }
 }
 
-// --- InfoChip JUGA DI-UPDATE ---
+
 class InfoChip extends StatelessWidget {
   final IconData icon;
   final String text;
@@ -180,12 +187,15 @@ class InfoChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Chip(
-      avatar: Icon(icon, color: color, size: 14.sp), // 20 -> 14.sp
+      avatar: Icon(icon, color: color, size: 14.sp),
       label: Text(
         text,
-        style: TextStyle(fontSize: 11.sp), // Ukuran font responsif
+        style: TextStyle(
+          fontSize: 11.sp, 
+          color: Colors.white.withOpacity(0.9), 
+        ),
       ),
-      backgroundColor: color.withValues(alpha: 0.1),
+      backgroundColor: color.withOpacity(0.1), 
       side: BorderSide.none,
       padding: EdgeInsets.symmetric(horizontal: 1.w, vertical: 0.5.h),
     );
