@@ -166,7 +166,7 @@ class InfoChip extends StatelessWidget {
         text,
         style: TextStyle(fontSize: 11.sp), // Ukuran font responsif
       ),
-      backgroundColor: color.withOpacity(0.1),
+      backgroundColor: color.withValues(alpha: 0.1),
       side: BorderSide.none,
       padding: EdgeInsets.symmetric(horizontal: 1.w, vertical: 0.5.h),
     );

@@ -302,7 +302,7 @@ class _AnimeGridCard extends StatelessWidget {
                     color: isFav ? Colors.red : Colors.white,
                   ),
                   style: IconButton.styleFrom(
-                    backgroundColor: Colors.black.withOpacity(0.5)
+                    backgroundColor: Colors.black.withValues(alpha: 0.5),
                   ),
                   onPressed: () {
                     context.read<FavoriteCubit>().toggleFavorite(anime);

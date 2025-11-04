@@ -192,7 +192,7 @@ class _FavoriteGridCard extends StatelessWidget {
             child: IconButton(
               icon: const Icon(Icons.delete_forever, color: Colors.white),
               style: IconButton.styleFrom(
-                backgroundColor: Colors.red.withOpacity(0.7)
+                backgroundColor: Colors.red.withValues(alpha: 0.7),
               ),
               onPressed: () {
                 context.read<FavoriteCubit>().toggleFavorite(anime);

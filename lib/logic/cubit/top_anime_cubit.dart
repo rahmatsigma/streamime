@@ -1,6 +1,9 @@
 // lib/logic/cubit/top_anime_cubit.dart
+import 'dart:developer' as developer;
+
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+
 import '../../data/models/anime_model.dart';
 import '../../data/repositories/anime_repository.dart';
 
@@ -91,7 +94,11 @@ class TopAnimeCubit extends Cubit<TopAnimeState> {
     } catch (e) {
       // Jika load more gagal, kita bisa diam saja atau emit error
       // Di sini kita biarkan, agar user bisa coba scroll lagi
-      print("Error loading more: $e");
+      developer.log(
+        'Error loading more anime',
+        error: e,
+        name: 'TopAnimeCubit',
+      );
     }
   }
 }

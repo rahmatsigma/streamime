@@ -1,5 +1,8 @@
 // lib/data/repositories/anime_repository.dart
+import 'dart:developer' as developer;
+
 import 'package:dio/dio.dart';
+
 import '../models/anime_model.dart';
 import '../models/anime_detail_model.dart';
 
@@ -22,11 +25,19 @@ class AnimeRepository {
           rawData.map((json) => AnimeModel.fromJson(json)).toList();
       return animeList;
 
-    } on DioException catch (e) {
-      print('Dio error: $e');
+    } on DioException catch (e, stackTrace) {
+      developer.log(
+        'Failed to load top anime',
+        error: e,
+        stackTrace: stackTrace,
+      );
       throw Exception('Failed to load top anime: ${e.message}');
-    } catch (e) {
-      print('Unexpected error: $e');
+    } catch (e, stackTrace) {
+      developer.log(
+        'Unexpected error while loading top anime',
+        error: e,
+        stackTrace: stackTrace,
+      );
       throw Exception('An unexpected error occurred: $e');
     }
   }
@@ -38,11 +49,19 @@ class AnimeRepository {
       final response = await _dio.get('/anime/$animeId');
       final AnimeDetailModel detail = AnimeDetailModel.fromJson(response.data['data']);
       return detail;
-    } on DioException catch (e) {
-      print('Dio error: $e');
+    } on DioException catch (e, stackTrace) {
+      developer.log(
+        'Failed to load anime detail',
+        error: e,
+        stackTrace: stackTrace,
+      );
       throw Exception('Failed to load anime detail: ${e.message}');
-    } catch (e) {
-      print('Unexpected error: $e');
+    } catch (e, stackTrace) {
+      developer.log(
+        'Unexpected error while loading anime detail',
+        error: e,
+        stackTrace: stackTrace,
+      );
       throw Exception('An unexpected error occurred: $e');
     }
   }
@@ -65,11 +84,19 @@ class AnimeRepository {
           .toList();
       return animeList;
 
-    } on DioException catch (e) {
-      print('Dio error: $e');
+    } on DioException catch (e, stackTrace) {
+      developer.log(
+        'Failed to search anime',
+        error: e,
+        stackTrace: stackTrace,
+      );
       throw Exception('Failed to load search results: ${e.message}');
-    } catch (e) {
-      print('Unexpected error: $e');
+    } catch (e, stackTrace) {
+      developer.log(
+        'Unexpected error while searching anime',
+        error: e,
+        stackTrace: stackTrace,
+      );
       throw Exception('An unexpected error occurred: $e');
     }
   }
