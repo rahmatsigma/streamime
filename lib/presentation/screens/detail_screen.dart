@@ -1,7 +1,8 @@
 // lib/presentation/screens/detail_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:sizer/sizer.dart'; // <-- IMPORT SIZER
+import 'package:sizer/sizer.dart';
+import 'package:go_router/go_router.dart';
 import '../../data/models/anime_model.dart';
 import '../../data/repositories/anime_repository.dart';
 import '../../logic/cubit/anime_detail_cubit.dart';
@@ -31,6 +32,12 @@ class DetailScreen extends StatelessWidget {
 
           return Scaffold(
             appBar: AppBar(
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: (){
+                  context.go('/HomeScreen');
+                }
+              ),
               title: Text(title),
               actions: [
                 if (state is AnimeDetailSuccess)
