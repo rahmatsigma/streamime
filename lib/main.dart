@@ -85,8 +85,8 @@ class MyApp extends StatelessWidget {
                 ),
                 textTheme: GoogleFonts.poppinsTextTheme()
                     .apply(
-                      bodyColor: colorScheme.onBackground,
-                      displayColor: colorScheme.onBackground,
+                      bodyColor: colorScheme.onSurface,
+                      displayColor: colorScheme.onSurface,
                     ),
                 inputDecorationTheme: InputDecorationTheme(
                   filled: true,
