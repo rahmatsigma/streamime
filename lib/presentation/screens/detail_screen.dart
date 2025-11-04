@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sizer/sizer.dart';
 import 'package:go_router/go_router.dart';
 import '../../data/models/anime_model.dart';
-import '../../data/repositories/anime_repository.dart';
+import '../../data/repositories/anime_repository.dart'; // fkjgfekgfe
 import '../../logic/cubit/anime_detail_cubit.dart';
 import '../../logic/cubit/favorite_cubit.dart';
 
