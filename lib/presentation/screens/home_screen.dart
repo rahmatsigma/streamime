@@ -54,7 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Streamimer'),
+        title: const Text('Streamime'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -65,7 +65,15 @@ class _HomeScreenState extends State<HomeScreen> {
           )
         ],
       ),
-      body: Column(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF0B1120), Color(0xFF1A1036)],
+          ),
+        ),
+        child: Column(
         children: [
           // --- SEARCH BAR (Sizer) ---
           Padding(
@@ -75,10 +83,9 @@ class _HomeScreenState extends State<HomeScreen> {
               decoration: InputDecoration(
                 hintText: 'Search anime...',
                 prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25.0),
-                ),
-                contentPadding: EdgeInsets.symmetric(vertical: 1.5.h),
+                prefixIconColor: Colors.white70,
+                suffixIconColor: Colors.white70,
+                contentPadding: EdgeInsets.symmetric(vertical: 1.2.h),
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.clear),
                   onPressed: (){
@@ -179,6 +186,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+      ),
     );
   }
 }
@@ -194,12 +202,20 @@ class _AnimeListTile extends StatelessWidget {
     return Card(
       margin: EdgeInsets.symmetric(horizontal: 2.w, vertical: 0.8.h),
       child: ListTile(
-        leading: Image.network(
-          anime.imageUrl,
-          width: 14.w,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) =>
-              const Icon(Icons.broken_image),
+        contentPadding: EdgeInsets.all(2.w),
+        leading: Hero(
+          tag: 'anime-${anime.id}',
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.network(
+              anime.imageUrl,
+              width: 14.w,
+              height: 14.w,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) =>
+                  const Icon(Icons.broken_image),
+            ),
+          ),
         ),
         title: Text(anime.title, maxLines: 2, overflow: TextOverflow.ellipsis),
         subtitle: Text('Score: ${anime.score.toString()}'),
@@ -233,6 +249,7 @@ class _AnimeGridCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       clipBehavior: Clip.antiAlias, // Biar gambar rapi
+      elevation: 3,
       child: Stack(
         children: [
           // Konten utama
@@ -240,16 +257,17 @@ class _AnimeGridCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
-                child: Image.network(
-                  anime.imageUrl,
-                  // HAPUS height: 25.h
-                  fit: BoxFit.cover, // fit: cover penting
-                  errorBuilder: (context, error, stackTrace) =>
-                      // Ganti SizedBox dengan Container/Icon di tengah
-                      Container(
-                    color: Colors.grey[850],
-                    child: Center(
-                      child: Icon(Icons.broken_image, size: 8.w),
+                child: Hero(
+                  tag: 'anime-${anime.id}',
+                  child: Image.network(
+                    anime.imageUrl,
+                    fit: BoxFit.cover, // fit: cover penting
+                    errorBuilder: (context, error, stackTrace) =>
+                        Container(
+                      color: Colors.grey[850],
+                      child: Center(
+                        child: Icon(Icons.broken_image, size: 8.w),
+                      ),
                     ),
                   ),
                 ),
