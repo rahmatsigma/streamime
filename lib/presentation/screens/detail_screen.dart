@@ -78,68 +78,80 @@ class DetailScreen extends StatelessWidget {
 
     if (state is AnimeDetailSuccess) {
       final anime = state.anime;
-      return SingleChildScrollView(
-        padding: EdgeInsets.all(4.w), // 16.0 -> 4.w
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Image.network(
-                anime.imageUrl,
-                height: 40.h, // 300 -> 40.h (40% tinggi layar)
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
-                    Icon(Icons.broken_image, size: 40.h),
-              ),
-            ),
-            SizedBox(height: 2.h), // 16.0 -> 2.h
-            Text(
-              anime.title,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18.sp, // Ukuran font responsif
+      return Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF0B1120), Color(0xFF1A1036)],
+          ),
+        ),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(4.w), // 16.0 -> 4.w
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Hero(
+                  tag: 'anime-${anime.id}',
+                  child: Image.network(
+                    anime.imageUrl,
+                    height: 40.h, // 300 -> 40.h (40% tinggi layar)
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) =>
+                        Icon(Icons.broken_image, size: 40.h),
                   ),
-            ),
-            SizedBox(height: 1.h), // 8.0 -> 1.h
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                InfoChip(
-                  icon: Icons.star,
-                  text: '${anime.score} / 10',
-                  color: Colors.amber,
                 ),
-                InfoChip(
-                  icon: Icons.tv,
-                  text: '${anime.episodes ?? '?'} episodes',
-                  color: Colors.cyan,
-                ),
-                InfoChip(
-                  icon: Icons.info_outline,
-                  text: anime.status,
-                  color: Colors.green,
-                ),
-              ],
-            ),
-            SizedBox(height: 2.h),
-            const Divider(),
-            SizedBox(height: 2.h),
-            Text(
-              'Synopsis',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontSize: 16.sp, // Ukuran font responsif
               ),
-            ),
-            SizedBox(height: 1.h),
-            Text(
-              anime.synopsis,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontSize: 12.sp, // Ukuran font responsif
-                height: 1.5, // Jarak antar baris
+              SizedBox(height: 2.h), // 16.0 -> 2.h
+              Text(
+                anime.title,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18.sp, // Ukuran font responsif
+                    ),
               ),
-              textAlign: TextAlign.justify,
-            ),
-          ],
+              SizedBox(height: 1.h), // 8.0 -> 1.h
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  InfoChip(
+                    icon: Icons.star,
+                    text: '${anime.score} / 10',
+                    color: Colors.amber,
+                  ),
+                  InfoChip(
+                    icon: Icons.tv,
+                    text: '${anime.episodes ?? '?'} episodes',
+                    color: Colors.cyan,
+                  ),
+                  InfoChip(
+                    icon: Icons.info_outline,
+                    text: anime.status,
+                    color: Colors.green,
+                  ),
+                ],
+              ),
+              SizedBox(height: 2.h),
+              const Divider(),
+              SizedBox(height: 2.h),
+              Text(
+                'Synopsis',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontSize: 16.sp, // Ukuran font responsif
+                ),
+              ),
+              SizedBox(height: 1.h),
+              Text(
+                anime.synopsis,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontSize: 12.sp, // Ukuran font responsif
+                  height: 1.5, // Jarak antar baris
+                ),
+                textAlign: TextAlign.justify,
+              ),
+            ],
+          ),
         ),
       );
     }

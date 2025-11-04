@@ -17,7 +17,15 @@ class FavoritesScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('My Favorites'),
       ),
-      body: BlocBuilder<FavoriteCubit, FavoriteState>(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF0B1120), Color(0xFF1A1036)],
+          ),
+        ),
+        child: BlocBuilder<FavoriteCubit, FavoriteState>(
         builder: (context, state) {
           
           // --- KONDISI 1: Jika Favorit Kosong ---
@@ -76,6 +84,7 @@ class FavoritesScreen extends StatelessWidget {
           );
         },
       ),
+      ),
     );
   }
 }
@@ -90,12 +99,20 @@ class _FavoriteListTile extends StatelessWidget {
     return Card(
       margin: EdgeInsets.symmetric(horizontal: 2.w, vertical: 0.8.h),
       child: ListTile(
-        leading: Image.network(
-          anime.imageUrl,
-          width: 14.w,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) =>
-              const Icon(Icons.broken_image),
+        contentPadding: EdgeInsets.all(2.w),
+        leading: Hero(
+          tag: 'anime-${anime.id}',
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.network(
+              anime.imageUrl,
+              width: 14.w,
+              height: 14.w,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) =>
+                  const Icon(Icons.broken_image),
+            ),
+          ),
         ),
         title: Text(anime.title),
         subtitle: Text('Score: ${anime.score.toString()}'),
@@ -137,16 +154,17 @@ class _FavoriteGridCard extends StatelessWidget {
             children: [
               // --- PERBAIKAN MULAI DI SINI ---
               Expanded(
-                child: Image.network(
-                  anime.imageUrl,
-                  // HAPUS height: 25.h
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      // Ganti SizedBox dengan Container/Icon di tengah
-                      Container(
-                    color: Colors.grey[850],
-                    child: Center(
-                      child: Icon(Icons.broken_image, size: 8.w),
+                child: Hero(
+                  tag: 'anime-${anime.id}',
+                  child: Image.network(
+                    anime.imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) =>
+                        Container(
+                      color: Colors.grey[850],
+                      child: Center(
+                        child: Icon(Icons.broken_image, size: 8.w),
+                      ),
                     ),
                   ),
                 ),
