@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sizer/sizer.dart';
-import 'package:go_router/go_router.dart'; 
+import 'package:go_router/go_router.dart';
 import '../../data/models/anime_model.dart';
 import '../../data/repositories/anime_repository.dart';
 import '../../logic/cubit/anime_detail_cubit.dart';
@@ -20,24 +20,25 @@ class DetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => AnimeDetailCubit(
-        context.read<AnimeRepository>(),
-      )..fetchAnimeDetail(animeId), 
-      
+      create: (context) =>
+          AnimeDetailCubit(context.read<AnimeRepository>())
+            ..fetchAnimeDetail(animeId),
+
       child: Builder(
-        builder: (context) { 
+        builder: (context) {
           return BlocBuilder<AnimeDetailCubit, AnimeDetailState>(
             builder: (context, state) {
-              
-              final String title = (state is AnimeDetailSuccess) ? state.anime.title : animeTitle;
+              final String title = (state is AnimeDetailSuccess)
+                  ? state.anime.title
+                  : animeTitle;
 
               return Scaffold(
                 appBar: AppBar(
                   leading: IconButton(
                     icon: const Icon(Icons.arrow_back),
-                    onPressed: (){
-                      context.go('/'); 
-                    }
+                    onPressed: () {
+                      context.go('/');
+                    },
                   ),
 
                   title: Text(title),
@@ -45,7 +46,9 @@ class DetailScreen extends StatelessWidget {
                     if (state is AnimeDetailSuccess)
                       BlocBuilder<FavoriteCubit, FavoriteState>(
                         builder: (context, favoriteState) {
-                          final bool isFav = context.read<FavoriteCubit>().isFavorite(state.anime.id);
+                          final bool isFav = context
+                              .read<FavoriteCubit>()
+                              .isFavorite(state.anime.id);
                           return IconButton(
                             icon: Icon(
                               isFav ? Icons.favorite : Icons.favorite_border,
@@ -53,27 +56,28 @@ class DetailScreen extends StatelessWidget {
                             ),
                             onPressed: () {
                               final animeAsModel = AnimeModel(
-                                id: state.anime.id, 
-                                title: state.anime.title, 
-                                imageUrl: state.anime.imageUrl, 
-                                score: state.anime.score
+                                id: state.anime.id,
+                                title: state.anime.title,
+                                imageUrl: state.anime.imageUrl,
+                                score: state.anime.score,
                               );
-                              context.read<FavoriteCubit>().toggleFavorite(animeAsModel);
+                              context.read<FavoriteCubit>().toggleFavorite(
+                                animeAsModel,
+                              );
                             },
                           );
                         },
-                      )
+                      ),
                   ],
                 ),
                 body: _buildBody(context, state),
               );
             },
           );
-        }
+        },
       ),
     );
   }
-
 
   Widget _buildBody(BuildContext context, AnimeDetailState state) {
     if (state is AnimeDetailLoading) {
@@ -96,7 +100,7 @@ class DetailScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Center(
-                child: Hero( 
+                child: Hero(
                   tag: 'anime-${anime.id}',
                   child: Image.network(
                     anime.imageUrl,
@@ -111,12 +115,12 @@ class DetailScreen extends StatelessWidget {
               Text(
                 anime.title,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18.sp, 
-                      color: Colors.white,
-                    ),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18.sp,
+                  color: Colors.white,
+                ),
               ),
-              SizedBox(height: 1.h), 
+              SizedBox(height: 1.h),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -144,7 +148,7 @@ class DetailScreen extends StatelessWidget {
                 'Synopsis',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontSize: 16.sp,
-                  color: Colors.white, 
+                  color: Colors.white,
                 ),
               ),
               SizedBox(height: 1.h),
@@ -153,7 +157,7 @@ class DetailScreen extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   fontSize: 12.sp,
                   height: 1.5,
-                  color: Colors.white70, 
+                  color: Colors.white70,
                 ),
                 textAlign: TextAlign.justify,
               ),
@@ -164,13 +168,14 @@ class DetailScreen extends StatelessWidget {
     }
 
     if (state is AnimeDetailError) {
-      return Center(child: Text(state.message, style: const TextStyle(color: Colors.red)));
+      return Center(
+        child: Text(state.message, style: const TextStyle(color: Colors.red)),
+      );
     }
-    
+
     return const Center(child: Text('Loading details...'));
   }
 }
-
 
 class InfoChip extends StatelessWidget {
   final IconData icon;
@@ -191,11 +196,11 @@ class InfoChip extends StatelessWidget {
       label: Text(
         text,
         style: TextStyle(
-          fontSize: 11.sp, 
-          color: Colors.white.withOpacity(0.9), 
+          fontSize: 11.sp,
+          color: Colors.white.withValues(alpha: 0.9),
         ),
       ),
-      backgroundColor: color.withOpacity(0.1), 
+      backgroundColor: color.withValues(alpha: 0.1),
       side: BorderSide.none,
       padding: EdgeInsets.symmetric(horizontal: 1.w, vertical: 0.5.h),
     );

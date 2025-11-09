@@ -1,19 +1,25 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:sizer/sizer.dart'; 
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:sizer/sizer.dart';
+
 import 'data/models/anime_model.dart';
 import 'data/repositories/anime_repository.dart';
+import 'firebase_options.dart';
+import 'logic/cubit/auth_cubit.dart';
 import 'logic/cubit/favorite_cubit.dart';
 import 'logic/cubit/top_anime_cubit.dart';
 import 'presentation/navigation/app_router.dart';
+import 'services/auth_service.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized(); 
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await Hive.initFlutter();
-  Hive.registerAdapter(AnimeModelAdapter()); 
-  await Hive.openBox<AnimeModel>('favorites'); 
+  Hive.registerAdapter(AnimeModelAdapter());
+  await Hive.openBox<AnimeModel>('favorites');
 
   runApp(const MyApp());
 }
@@ -25,20 +31,17 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return RepositoryProvider(
       create: (context) => AnimeRepository(),
-      child: MultiBlocProvider( 
+      child: MultiBlocProvider(
         providers: [
+          BlocProvider(create: (_) => AuthCubit(AuthService())),
           BlocProvider(
-            create: (context) => TopAnimeCubit(
-              context.read<AnimeRepository>(),
-            ),
+            create: (context) => TopAnimeCubit(context.read<AnimeRepository>()),
           ),
-          BlocProvider(
-            create: (context) => FavoriteCubit()
-              ..loadFavorites(),
-          ),
+          BlocProvider(create: (context) => FavoriteCubit()..loadFavorites()),
         ],
-        
-        child: Sizer( // <-- BUNGKUS DENGAN SIZER
+
+        child: Sizer(
+          // <-- BUNGKUS DENGAN SIZER
           builder: (context, orientation, deviceType) {
             final colorScheme = ColorScheme.fromSeed(
               seedColor: const Color(0xFF22D3EE), // cyan accent
@@ -51,7 +54,9 @@ class MyApp extends StatelessWidget {
               theme: ThemeData(
                 useMaterial3: true,
                 colorScheme: colorScheme,
-                scaffoldBackgroundColor: const Color(0xFF0B1120), // deep night blue
+                scaffoldBackgroundColor: const Color(
+                  0xFF0B1120,
+                ), // deep night blue
                 visualDensity: VisualDensity.adaptivePlatformDensity,
                 pageTransitionsTheme: const PageTransitionsTheme(
                   builders: {
@@ -83,11 +88,10 @@ class MyApp extends StatelessWidget {
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
-                textTheme: GoogleFonts.poppinsTextTheme()
-                    .apply(
-                      bodyColor: colorScheme.onSurface,
-                      displayColor: colorScheme.onSurface,
-                    ),
+                textTheme: GoogleFonts.poppinsTextTheme().apply(
+                  bodyColor: colorScheme.onSurface,
+                  displayColor: colorScheme.onSurface,
+                ),
                 inputDecorationTheme: InputDecorationTheme(
                   filled: true,
                   fillColor: Colors.white10,
@@ -106,18 +110,26 @@ class MyApp extends StatelessWidget {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(28),
-                    borderSide: BorderSide(color: colorScheme.secondary, width: 1.5),
+                    borderSide: BorderSide(
+                      color: colorScheme.secondary,
+                      width: 1.5,
+                    ),
                   ),
                 ),
                 chipTheme: ChipThemeData(
-                  backgroundColor: colorScheme.secondary.withValues(alpha: 0.12),
+                  backgroundColor: colorScheme.secondary.withValues(
+                    alpha: 0.12,
+                  ),
                   labelStyle: TextStyle(
                     color: colorScheme.onSecondary,
                     fontSize: 11.sp,
                   ),
                   shape: const StadiumBorder(),
                   side: BorderSide.none,
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                 ),
                 dividerTheme: const DividerThemeData(
                   color: Colors.white24,
