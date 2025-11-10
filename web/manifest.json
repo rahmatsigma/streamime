@@ -1,6 +1,6 @@
 {
-    "name": "smt3",
-    "short_name": "smt3",
+    "name": "manga_read",
+    "short_name": "manga_read",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
