@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:manga_read/features/theme/logic/theme_cubit.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -8,11 +10,12 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  bool _darkMode = true;
   bool _notificationEnabled = true;
 
   @override
   Widget build(BuildContext context) {
+    final bool isDarkMode = context.watch<ThemeCubit>().state.themeMode == ThemeMode.dark;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Pengaturan'),
@@ -23,11 +26,11 @@ class _SettingsPageState extends State<SettingsPage> {
           SwitchListTile(
             title: const Text('Tema Gelap'),
             subtitle: const Text('Aktifkan atau matikan mode gelap'),
-            value: _darkMode,
+
+            value: isDarkMode,
+
             onChanged: (value) {
-              setState(() {
-                _darkMode = value;
-              });
+              context.read<ThemeCubit>().toggleTheme(value);
             },
           ),
           const Divider(),
@@ -36,6 +39,7 @@ class _SettingsPageState extends State<SettingsPage> {
             subtitle: const Text('Dapatkan update bab terbaru'),
             value: _notificationEnabled,
             onChanged: (value) {
+              // Biarkan setState ini untuk switch notifikasi
               setState(() {
                 _notificationEnabled = value;
               });
