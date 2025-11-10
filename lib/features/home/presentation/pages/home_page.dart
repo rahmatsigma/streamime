@@ -1,4 +1,4 @@
-import 'dart:async'; 
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -20,8 +20,8 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
-  Timer? _debounce; 
-  bool _isSearching = false; 
+  Timer? _debounce;
+  bool _isSearching = false;
   final List<String> _favoriteManga = [
     'Solo Leveling',
     'Jujutsu Kaisen',
@@ -62,7 +62,7 @@ class _HomePageState extends State<HomePage> {
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     _debounce?.cancel();
-    
+
     super.dispose();
   }
 
@@ -146,9 +146,9 @@ class _HomePageState extends State<HomePage> {
           child: _isSearching
               ? _buildSearchBar()
               : const Text(
-                  'MangaRead - Populer',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
-                ),
+            'MangaRead - Populer',
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+          ),
         ),
         actions: [
           Padding(
@@ -174,7 +174,7 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       // --- AKHIR APPBAR BARU ---
-      
+
       body: BlocBuilder<MangaListCubit, MangaListState>(
         builder: (context, state) {
           // --- PERUBAHAN LOGIKA LOADING ---
@@ -196,7 +196,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               );
             }
-            
+
             // Render grid
             return _buildResponsiveGrid(
               state.mangaList,
@@ -230,8 +230,8 @@ class _HomePageState extends State<HomePage> {
               subtitle: !_isLoggedIn
                   ? 'Login untuk menyimpan favorite.'
                   : _favoriteManga.isEmpty
-                      ? 'Belum ada manga favorit.'
-                      : 'Terakhir: ${_favoriteManga.first}',
+                  ? 'Belum ada manga favorit.'
+                  : 'Terakhir: ${_favoriteManga.first}',
             ),
           ),
           const PopupMenuDivider(height: 12),
@@ -243,8 +243,8 @@ class _HomePageState extends State<HomePage> {
               subtitle: !_isLoggedIn
                   ? 'Login untuk melihat history.'
                   : _readingHistory.isEmpty
-                      ? 'Belum ada history.'
-                      : 'Terakhir: ${_readingHistory.first}',
+                  ? 'Belum ada history.'
+                  : 'Terakhir: ${_readingHistory.first}',
             ),
           ),
           const PopupMenuDivider(height: 12),
@@ -362,7 +362,7 @@ class _HomePageState extends State<HomePage> {
         title: const Text('Butuh Login'),
         content: const Text(
           'Fitur ini hanya tersedia untuk pengguna yang sudah login. '
-          'Masuk sekarang untuk mengakses favorit dan history bacaanmu.',
+              'Masuk sekarang untuk mengakses favorit dan history bacaanmu.',
         ),
         actions: [
           TextButton(
@@ -400,10 +400,15 @@ class _HomePageState extends State<HomePage> {
       case _ProfileMenuAction.favorites:
         if (!await _ensureLoggedIn()) return;
         if (!mounted) return;
+        // --- PERUBAHAN DI SINI ---
         context.push(
           '/favorites',
-          extra: List<String>.from(_favoriteManga),
+          extra: {
+            'favorites': List<String>.from(_favoriteManga),
+            'isLoggedIn': _isLoggedIn,
+          },
         );
+        // --- AKHIR PERUBAHAN ---
         break;
       case _ProfileMenuAction.history:
         if (!await _ensureLoggedIn()) return;
@@ -433,10 +438,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildResponsiveGrid(
-    MangaList mangaList,
-    bool isLoadingMore,
-    bool hasReachedMax,
-  ) {
+      MangaList mangaList,
+      bool isLoadingMore,
+      bool hasReachedMax,
+      ) {
     return Sizer(
       builder: (context, orientation, deviceType) {
         int crossAxisCount;
@@ -449,7 +454,7 @@ class _HomePageState extends State<HomePage> {
 
         // Jangan tambahkan 1 jika 'hasReachedMax' (karena search)
         final int itemCount =
-            isLoadingMore && !hasReachedMax ? mangaList.length + 1 : mangaList.length;
+        isLoadingMore && !hasReachedMax ? mangaList.length + 1 : mangaList.length;
 
         return GridView.builder(
           controller: _scrollController,
@@ -485,7 +490,7 @@ class _HomePageState extends State<HomePage> {
                   .firstWhere((rel) => rel['type'] == 'cover_art');
               final String fileName = coverRel['attributes']['fileName'];
               coverUrl =
-                  'https://uploads.mangadex.org/covers/$mangaId/$fileName.512.jpg';
+              'https://uploads.mangadex.org/covers/$mangaId/$fileName.512.jpg';
             } catch (e) {
               coverUrl = 'placeholder_url_error';
             }

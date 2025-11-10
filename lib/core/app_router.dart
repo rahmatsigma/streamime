@@ -19,7 +19,7 @@ class AppRouter {
         builder: (context, state) => const HomePage(),
       ),
       GoRoute(
-        path: '/manga-detail/:mangaId', // ':mangaId' adalah parameter
+        path: '/manga-detail/:mangaId',
         builder: (context, state) {
           final String mangaId = state.pathParameters['mangaId']!;
           return MangaDetailPage(mangaId: mangaId);
@@ -35,10 +35,27 @@ class AppRouter {
       GoRoute(
         path: '/favorites',
         builder: (context, state) {
-          final favorites = state.extra is List<String>
-              ? List<String>.from(state.extra as List<String>)
-              : const <String>[];
-          return FavoritePage(favoriteManga: favorites);
+          // --- PERUBAHAN DI SINI ---
+          bool isLoggedIn = false;
+          List<String> favorites = const <String>[];
+
+          if (state.extra is Map<String, dynamic>) {
+            final extra = state.extra as Map<String, dynamic>;
+            final favs = extra['favorites'];
+            final loggedIn = extra['isLoggedIn'];
+            if (favs is List<String>) {
+              favorites = List<String>.from(favs);
+            }
+            if (loggedIn is bool) {
+              isLoggedIn = loggedIn;
+            }
+          }
+
+          return FavoritePage(
+            isLoggedIn: isLoggedIn,
+            favoriteManga: favorites,
+          );
+          // --- AKHIR PERUBAHAN ---
         },
       ),
       GoRoute(
@@ -80,9 +97,9 @@ class AppRouter {
     ],
     // Optional: error builder
     errorBuilder: (context, state) => const Scaffold(
-  body: Center(
+      body: Center(
         child: Text('Halaman tidak ditemukan'),
       ),
     ),
   );
-}   
+}
