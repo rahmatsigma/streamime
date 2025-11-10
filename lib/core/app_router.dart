@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:manga_read/features/auth/presentation/pages/login_page.dart';
+import 'package:manga_read/features/auth/presentation/pages/register_page.dart';
+import 'package:manga_read/features/favorites/presentation/pages/favorite_page.dart';
+import 'package:manga_read/features/history/presentation/pages/reading_history_page.dart';
 import 'package:manga_read/features/home/presentation/pages/home_page.dart';
 import 'package:manga_read/features/manga_details/presentation/pages/manga_detail_page.dart';
 import 'package:manga_read/features/manga_reader/presentation/pages/reader_page.dart';
+import 'package:manga_read/features/settings/presentation/pages/settings_page.dart';
 
 
 class AppRouter {
@@ -26,7 +31,52 @@ class AppRouter {
           final String chapterId = state.pathParameters['chapterId']!;
           return ReaderPage(chapterId: chapterId);
         },
-      ),  
+      ),
+      GoRoute(
+        path: '/favorites',
+        builder: (context, state) {
+          final favorites = state.extra is List<String>
+              ? List<String>.from(state.extra as List<String>)
+              : const <String>[];
+          return FavoritePage(favoriteManga: favorites);
+        },
+      ),
+      GoRoute(
+        path: '/history',
+        builder: (context, state) {
+          bool isLoggedIn = false;
+          List<String> historyItems = const <String>[];
+
+          if (state.extra is Map<String, dynamic>) {
+            final extra = state.extra as Map<String, dynamic>;
+            final history = extra['history'];
+            final loggedIn = extra['isLoggedIn'];
+            if (history is List<String>) {
+              historyItems = List<String>.from(history);
+            }
+            if (loggedIn is bool) {
+              isLoggedIn = loggedIn;
+            }
+          }
+
+          return ReadingHistoryPage(
+            isLoggedIn: isLoggedIn,
+            historyItems: historyItems,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/settings',
+        builder: (context, state) => const SettingsPage(),
+      ),
+      GoRoute(
+        path: '/login',
+        builder: (context, state) => const LoginPage(),
+      ),
+      GoRoute(
+        path: '/register',
+        builder: (context, state) => const RegisterPage(),
+      ),
     ],
     // Optional: error builder
     errorBuilder: (context, state) => const Scaffold(
