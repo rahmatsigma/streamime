@@ -8,12 +8,21 @@ import 'package:manga_read/features/home/presentation/pages/home_page.dart';
 import 'package:manga_read/features/manga_details/presentation/pages/manga_detail_page.dart';
 import 'package:manga_read/features/manga_reader/presentation/pages/reader_page.dart';
 import 'package:manga_read/features/settings/presentation/pages/settings_page.dart';
+// --- IMPORT BARU ---
+import 'package:manga_read/features/splash/presentation/pages/splash_screen.dart';
 
 
 class AppRouter {
   static final GoRouter router = GoRouter(
-    initialLocation: '/',
+    initialLocation: '/splash',
+    // --- AKHIR PERUBAHAN ---
     routes: [
+      // --- ROUTE BARU ---
+      GoRoute(
+        path: '/splash',
+        builder: (context, state) => const SplashScreen(),
+      ),
+      // --- AKHIR ROUTE BARU ---
       GoRoute(
         path: '/',
         builder: (context, state) => const HomePage(),
@@ -35,7 +44,6 @@ class AppRouter {
       GoRoute(
         path: '/favorites',
         builder: (context, state) {
-          // --- PERUBAHAN DI SINI ---
           bool isLoggedIn = false;
           List<String> favorites = const <String>[];
 
@@ -55,7 +63,6 @@ class AppRouter {
             isLoggedIn: isLoggedIn,
             favoriteManga: favorites,
           );
-          // --- AKHIR PERUBAHAN ---
         },
       ),
       GoRoute(
@@ -95,7 +102,6 @@ class AppRouter {
         builder: (context, state) => const RegisterPage(),
       ),
     ],
-    // Optional: error builder
     errorBuilder: (context, state) => const Scaffold(
       body: Center(
         child: Text('Halaman tidak ditemukan'),
