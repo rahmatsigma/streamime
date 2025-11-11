@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "4216931595",
+    "project_id": "mangaread-30388",
+    "storage_bucket": "mangaread-30388.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:4216931595:android:5504a0090eff133e0bce0e",
+        "android_client_info": {
+          "package_name": "com.example.manga_read"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAI19etzhqvhRZKR6dYeMy3C1M9FhCLHx4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

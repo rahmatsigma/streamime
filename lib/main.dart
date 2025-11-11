@@ -1,3 +1,5 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'package:manga_read/features/home/data/repositories/i_manga_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -5,12 +7,15 @@ import 'package:manga_read/core/app_router.dart';
 import 'package:manga_read/features/home/data/repositories/manga_repository_impl.dart';
 import 'package:manga_read/features/home/logic/manga_list_cubit.dart';
 import 'package:sizer/sizer.dart';
-
-// --- IMPORT BARU ---
 import 'package:manga_read/features/theme/logic/theme_cubit.dart';
 import 'package:manga_read/features/theme/logic/theme_state.dart';
+import 'package:manga_read/features/auth/logic/auth_cubit.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   final IMangaRepository mangaRepository = MangaRepositoryImpl();
 
   runApp(
@@ -22,11 +27,17 @@ void main() {
         BlocProvider(
           create: (context) => ThemeCubit(),
         ),
+        BlocProvider(
+        create: (context) => AuthCubit(), 
+        lazy: false, 
+      ),
       ],
       child: const MangaReadApp(),
     ),
   );
 }
+
+
 
 class MangaReadApp extends StatelessWidget {
   const MangaReadApp({super.key});

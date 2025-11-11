@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // <-- IMPORT FIREBASE
+import 'package:go_router/go_router.dart'; // <-- IMPORT GO_ROUTER
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -8,14 +10,19 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
+  // Instance Firebase Auth
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _isProcessing = false;
+  String? _errorMessage; // Untuk menampilkan error
 
   @override
   void dispose() {
@@ -26,16 +33,54 @@ class _RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
-  Future<void> _simulateRegister() async {
+  // --- INI FUNGSI BARU YANG TERHUBUNG KE FIREBASE ---
+  Future<void> _registerWithFirebase() async {
+    // 1. Validasi form
     if (!(_formKey.currentState?.validate() ?? false)) return;
-    setState(() => _isProcessing = true);
-    await Future.delayed(const Duration(seconds: 1));
-    if (!mounted) return;
-    Navigator.of(context).pop(true);
+    
+    // 2. Mulai loading
+    setState(() {
+      _isProcessing = true;
+      _errorMessage = null;
+    });
+
+    try {
+      // 3. Panggil Firebase untuk membuat akun
+      await _auth.createUserWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+      
+      // (Opsional) Update nama profil pengguna
+      // Ini tidak wajib untuk login, tapi bagus untuk 'profile'
+      if (_auth.currentUser != null) {
+        await _auth.currentUser!.updateDisplayName(_nameController.text.trim());
+      }
+
+      // 4. Jika berhasil, kembali ke Halaman Utama
+      // Firebase otomatis login setelah register
+      if (mounted) {
+        context.go('/'); // Langsung ke HomePage
+      }
+
+    } on FirebaseAuthException catch (e) {
+      // 5. Jika Gagal, tampilkan pesan error
+      setState(() {
+        _errorMessage = e.message ?? "Gagal mendaftar.";
+        _isProcessing = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = "Terjadi error yang tidak diketahui.";
+        _isProcessing = false;
+      });
+    }
   }
+  // --- AKHIR FUNGSI BARU ---
 
   void _cancel() {
-    Navigator.of(context).pop(false);
+    // Gunakan GoRouter untuk kembali
+    context.pop();
   }
 
   @override
@@ -152,8 +197,22 @@ class _RegisterPageState extends State<RegisterPage> {
                 },
               ),
               const SizedBox(height: 24),
+
+              // --- TAMPILKAN ERROR JIKA ADA ---
+              if (_errorMessage != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16.0),
+                  child: Text(
+                    _errorMessage!,
+                    style: const TextStyle(color: Colors.redAccent),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              // --- AKHIR ERROR ---
+
               ElevatedButton(
-                onPressed: _isProcessing ? null : _simulateRegister,
+                // Panggil fungsi Firebase yang baru
+                onPressed: _isProcessing ? null : _registerWithFirebase,
                 child: _isProcessing
                     ? const SizedBox(
                         width: 20,

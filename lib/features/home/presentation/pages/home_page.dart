@@ -8,6 +8,11 @@ import 'package:manga_read/features/home/logic/manga_list_state.dart';
 import 'package:manga_read/features/home/presentation/widgets/manga_grid_card.dart';
 import 'package:sizer/sizer.dart';
 
+// --- IMPORT BARU UNTUK FIREBASE AUTH ---
+import 'package:manga_read/features/auth/logic/auth_cubit.dart';
+import 'package:manga_read/features/auth/logic/auth_state.dart';
+// --- AKHIR IMPORT BARU ---
+
 enum _ProfileMenuAction { favorites, history, settings, logout }
 
 class HomePage extends StatefulWidget {
@@ -22,17 +27,19 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController _searchController = TextEditingController();
   Timer? _debounce;
   bool _isSearching = false;
+
+  // TODO: Ganti data dummy ini dengan data dari Cubit/Firestore
   final List<String> _favoriteManga = [
     'Solo Leveling',
     'Jujutsu Kaisen',
-    'One Piece',
   ];
   final List<String> _readingHistory = [
     'Blue Lock - Ch. 224',
     'Chainsaw Man - Ch. 146',
-    'Spy x Family - Ch. 88',
   ];
-  bool _isLoggedIn = false;
+  
+  // Variabel _isLoggedIn LOKAL SUDAH DIHAPUS.
+  // Kita akan mendapatkannya dari AuthCubit
 
   @override
   void initState() {
@@ -125,93 +132,95 @@ class _HomePageState extends State<HomePage> {
       _isSearching = !_isSearching;
     });
 
-    // Jika kita menutup search, bersihkan text dan panggil ulang 'popular'
     if (!_isSearching && _searchController.text.isNotEmpty) {
-      _searchController.clear(); // Ini akan otomatis trigger _onSearchChanged -> fetchPopularManga()
+      _searchController.clear();
     }
   }
-  // --- AKHIR FUNGSI BARU ---
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      // --- APPBAR BARU YANG DINAMIS ---
-      appBar: AppBar(
-        toolbarHeight: 96,
-        centerTitle: false,
-        titleSpacing: 16,
-        // Tampilkan search bar atau judul biasa, tergantung state
-        title: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          child: _isSearching
-              ? _buildSearchBar()
-              : const Text(
-            'MangaRead - Populer',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
-          ),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.05),
-                borderRadius: BorderRadius.circular(30),
-                border: Border.all(color: Colors.white24),
-              ),
-              child: IconButton(
-                icon: Icon(_isSearching ? Icons.close : Icons.search),
-                tooltip: _isSearching ? 'Tutup pencarian' : 'Cari manga',
-                onPressed: _toggleSearch,
-              ),
+    // --- PERUBAHAN ---
+    // Bungkus Scaffold dengan BlocBuilder AuthCubit
+    return BlocBuilder<AuthCubit, AuthState>(
+      builder: (context, authState) {
+        
+        // Dapatkan status login saat ini dari AuthCubit
+        final bool isLoggedIn = authState.status == AuthStatus.authenticated;
+
+        return Scaffold(
+          appBar: AppBar(
+            toolbarHeight: 96,
+            centerTitle: false,
+            titleSpacing: 16,
+            title: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: _isSearching
+                  ? _buildSearchBar()
+                  : const Text(
+                      'MangaRead - Populer',
+                      style:
+                          TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+                    ),
             ),
-          ),
-          const SizedBox(width: 8),
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0, top: 8, bottom: 8),
-            child: _buildProfileMenu(),
-          ),
-        ],
-      ),
-      // --- AKHIR APPBAR BARU ---
-
-      body: BlocBuilder<MangaListCubit, MangaListState>(
-        builder: (context, state) {
-          // --- PERUBAHAN LOGIKA LOADING ---
-          // Kita tampilkan 'loading' hanya jika BUKAN state 'Loaded'
-          // Ini mencegah 'pop-in' saat mengetik
-          if (state is MangaListLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (state is MangaListError) {
-            return Center(child: Text('Error: ${state.message}'));
-          }
-          if (state is MangaListLoaded) {
-            // Jika list kosong (setelah search), tampilkan pesan
-            if (state.mangaList.isEmpty) {
-              return const Center(
-                child: Text(
-                  'Tidak ada manga ditemukan.',
-                  style: TextStyle(fontSize: 18, color: Colors.grey),
+            actions: [
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(30),
+                    border: Border.all(color: Colors.white24),
+                  ),
+                  child: IconButton(
+                    icon: Icon(_isSearching ? Icons.close : Icons.search),
+                    tooltip: _isSearching ? 'Tutup pencarian' : 'Cari manga',
+                    onPressed: _toggleSearch,
+                  ),
                 ),
-              );
-            }
-
-            // Render grid
-            return _buildResponsiveGrid(
-              state.mangaList,
-              state.isLoadingMore,
-              state.hasReachedMax,
-            );
-          }
-          // Fallback untuk MangaListInitial
-          return const Center(child: CircularProgressIndicator());
-        },
-      ),
+              ),
+              const SizedBox(width: 8),
+              Padding(
+                padding:
+                    const EdgeInsets.only(right: 16.0, top: 8, bottom: 8),
+                // Kirim status login ke menu profil
+                child: _buildProfileMenu(isLoggedIn), 
+              ),
+            ],
+          ),
+          body: BlocBuilder<MangaListCubit, MangaListState>(
+            builder: (context, state) {
+              if (state is MangaListLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (state is MangaListError) {
+                return Center(child: Text('Error: ${state.message}'));
+              }
+              if (state is MangaListLoaded) {
+                if (state.mangaList.isEmpty) {
+                  return const Center(
+                    child: Text(
+                      'Tidak ada manga ditemukan.',
+                      style: TextStyle(fontSize: 18, color: Colors.grey),
+                    ),
+                  );
+                }
+                return _buildResponsiveGrid(
+                  state.mangaList,
+                  state.isLoadingMore,
+                  state.hasReachedMax,
+                );
+              }
+              return const Center(child: CircularProgressIndicator());
+            },
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildProfileMenu() {
+  // --- PERUBAHAN: Terima 'isLoggedIn' sebagai parameter ---
+  Widget _buildProfileMenu(bool isLoggedIn) {
     return PopupMenuButton<_ProfileMenuAction>(
       tooltip: 'Buka menu profil',
       offset: const Offset(0, 48),
@@ -219,7 +228,8 @@ class _HomePageState extends State<HomePage> {
       color: const Color(0xFF1F1F24),
       constraints: const BoxConstraints(minWidth: 260),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      onSelected: _handleProfileMenuSelection,
+      // --- PERUBAHAN: Kirim status login ke handler ---
+      onSelected: (action) => _handleProfileMenuSelection(action, isLoggedIn),
       itemBuilder: (context) {
         final entries = <PopupMenuEntry<_ProfileMenuAction>>[
           PopupMenuItem<_ProfileMenuAction>(
@@ -227,11 +237,12 @@ class _HomePageState extends State<HomePage> {
             child: _buildMenuTile(
               icon: Icons.favorite_border,
               title: 'Favorite',
-              subtitle: !_isLoggedIn
+              // --- PERUBAHAN: Gunakan 'isLoggedIn' ---
+              subtitle: !isLoggedIn
                   ? 'Login untuk menyimpan favorite.'
                   : _favoriteManga.isEmpty
-                  ? 'Belum ada manga favorit.'
-                  : 'Terakhir: ${_favoriteManga.first}',
+                      ? 'Belum ada manga favorit.'
+                      : 'Terakhir: ${_favoriteManga.first}',
             ),
           ),
           const PopupMenuDivider(height: 12),
@@ -240,11 +251,12 @@ class _HomePageState extends State<HomePage> {
             child: _buildMenuTile(
               icon: Icons.history,
               title: 'History Baca',
-              subtitle: !_isLoggedIn
+              // --- PERUBAHAN: Gunakan 'isLoggedIn' ---
+              subtitle: !isLoggedIn
                   ? 'Login untuk melihat history.'
                   : _readingHistory.isEmpty
-                  ? 'Belum ada history.'
-                  : 'Terakhir: ${_readingHistory.first}',
+                      ? 'Belum ada history.'
+                      : 'Terakhir: ${_readingHistory.first}',
             ),
           ),
           const PopupMenuDivider(height: 12),
@@ -258,7 +270,8 @@ class _HomePageState extends State<HomePage> {
           ),
         ];
 
-        if (_isLoggedIn) {
+        // --- PERUBAHAN: Gunakan 'isLoggedIn' ---
+        if (isLoggedIn) {
           entries.addAll([
             const PopupMenuDivider(height: 12),
             PopupMenuItem<_ProfileMenuAction>(
@@ -273,7 +286,8 @@ class _HomePageState extends State<HomePage> {
                       color: Colors.redAccent.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.logout, color: Colors.redAccent, size: 20),
+                    child: const Icon(Icons.logout,
+                        color: Colors.redAccent, size: 20),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -353,83 +367,75 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Future<bool> _ensureLoggedIn() async {
-    if (_isLoggedIn) return true;
-
-    final goToLogin = await showDialog<bool>(
+  // --- FUNGSI INI DIUBAH TOTAL ---
+  // Fungsi ini sekarang hanya 'void' dan tidak mengembalikan 'bool'
+  void _showLoginDialog() {
+    showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Butuh Login'),
         content: const Text(
           'Fitur ini hanya tersedia untuk pengguna yang sudah login. '
-              'Masuk sekarang untuk mengakses favorit dan history bacaanmu.',
+          'Masuk sekarang untuk mengakses favorit dan history bacaanmu.',
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
+            onPressed: () => Navigator.of(dialogContext).pop(),
             child: const Text('Nanti Saja'),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
+            onPressed: () {
+              // 1. Tutup dialog
+              Navigator.of(dialogContext).pop();
+              // 2. Navigasi ke halaman login
+              context.push('/login');
+            },
             child: const Text('Ke Halaman Login'),
           ),
         ],
       ),
     );
+  }
 
-    if (goToLogin == true) {
-      if (!mounted) return false;
-      final loginSuccess = await context.push<bool>('/login');
-      if (!mounted) return false;
-      if (loginSuccess == true) {
-        setState(() {
-          _isLoggedIn = true;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Login berhasil.')),
-        );
-        return true;
+  // --- FUNGSI INI DIUBAH TOTAL ---
+  void _handleProfileMenuSelection(
+      _ProfileMenuAction action, bool isLoggedIn) {
+    // Cek otentikasi DULU
+    if (action == _ProfileMenuAction.favorites ||
+        action == _ProfileMenuAction.history) {
+      if (!isLoggedIn) {
+        _showLoginDialog(); // Tampilkan dialog jika belum login
+        return; // Hentikan eksekusi
       }
     }
 
-    return false;
-  }
-
-  void _handleProfileMenuSelection(_ProfileMenuAction action) async {
+    // Jika sudah login (atau aksi tidak butuh login), lanjutkan
     switch (action) {
       case _ProfileMenuAction.favorites:
-        if (!await _ensureLoggedIn()) return;
-        if (!mounted) return;
-        // --- PERUBAHAN DI SINI ---
         context.push(
           '/favorites',
           extra: {
             'favorites': List<String>.from(_favoriteManga),
-            'isLoggedIn': _isLoggedIn,
+            'isLoggedIn': isLoggedIn,
           },
         );
-        // --- AKHIR PERUBAHAN ---
         break;
       case _ProfileMenuAction.history:
-        if (!await _ensureLoggedIn()) return;
-        if (!mounted) return;
         context.push(
           '/history',
           extra: {
             'history': List<String>.from(_readingHistory),
-            'isLoggedIn': _isLoggedIn,
+            'isLoggedIn': isLoggedIn,
           },
         );
         break;
       case _ProfileMenuAction.settings:
-        if (!mounted) return;
         context.push('/settings');
         break;
       case _ProfileMenuAction.logout:
-        setState(() {
-          _isLoggedIn = false;
-        });
-        if (!mounted) return;
+        // Panggil fungsi logout dari AuthCubit
+        context.read<AuthCubit>().signOut(); 
+        
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Berhasil logout.')),
         );
@@ -438,10 +444,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildResponsiveGrid(
-      MangaList mangaList,
-      bool isLoadingMore,
-      bool hasReachedMax,
-      ) {
+    MangaList mangaList,
+    bool isLoadingMore,
+    bool hasReachedMax,
+  ) {
     return Sizer(
       builder: (context, orientation, deviceType) {
         int crossAxisCount;
@@ -452,9 +458,9 @@ class _HomePageState extends State<HomePage> {
         else
           crossAxisCount = 5;
 
-        // Jangan tambahkan 1 jika 'hasReachedMax' (karena search)
-        final int itemCount =
-        isLoadingMore && !hasReachedMax ? mangaList.length + 1 : mangaList.length;
+        final int itemCount = isLoadingMore && !hasReachedMax
+            ? mangaList.length + 1
+            : mangaList.length;
 
         return GridView.builder(
           controller: _scrollController,
@@ -468,7 +474,6 @@ class _HomePageState extends State<HomePage> {
           itemCount: itemCount,
           itemBuilder: (context, index) {
             if (index >= mangaList.length) {
-              // Spinner loading di bawah (hanya muncul jika 'isLoadingMore' true)
               return const Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -479,7 +484,6 @@ class _HomePageState extends State<HomePage> {
               );
             }
 
-            // Kode render kartu manga (tidak berubah)
             final manga = mangaList[index];
             final String title = _getBestTitle(manga);
             String coverUrl = '';
@@ -490,7 +494,7 @@ class _HomePageState extends State<HomePage> {
                   .firstWhere((rel) => rel['type'] == 'cover_art');
               final String fileName = coverRel['attributes']['fileName'];
               coverUrl =
-              'https://uploads.mangadex.org/covers/$mangaId/$fileName.512.jpg';
+                  'https://uploads.mangadex.org/covers/$mangaId/$fileName.512.jpg';
             } catch (e) {
               coverUrl = 'placeholder_url_error';
             }

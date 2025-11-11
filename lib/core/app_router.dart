@@ -12,6 +12,7 @@ import 'package:manga_read/features/settings/presentation/pages/settings_page.da
 import 'package:manga_read/features/splash/presentation/pages/splash_screen.dart';
 
 
+
 class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation: '/splash',

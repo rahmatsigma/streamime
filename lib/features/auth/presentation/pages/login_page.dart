@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -9,149 +10,152 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _formKey = GlobalKey<FormState>();
-  final _usernameController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _isProcessing = false;
-  bool _obscurePassword = true;
+  // Instance Firebase Auth
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  // Controller untuk text field
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  // State untuk loading dan pesan error
+  bool _isLoading = false;
+  String? _errorMessage;
 
   @override
   void dispose() {
-    _usernameController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  Future<void> _simulateLogin() async {
-    if (!(_formKey.currentState?.validate() ?? false)) return;
-    setState(() => _isProcessing = true);
-    await Future.delayed(const Duration(seconds: 1));
-    if (!mounted) return;
-    Navigator.of(context).pop(true);
-  }
+  // --- FUNGSI UNTUK LOGIN ---
+  Future<void> _login() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
 
-  void _cancel() {
-    Navigator.of(context).pop(false);
-  }
-
-  Future<void> _navigateToRegister() async {
-    if (_isProcessing) return;
-    final registered = await context.push<bool>('/register');
-    if (registered == true && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Registrasi berhasil, silakan login.')),
+    try {
+      // Coba login dengan Firebase
+      await _auth.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
       );
+
+      // Jika berhasil, kembali ke halaman utama
+      if (mounted) {
+        context.go('/');
+      }
+    } on FirebaseAuthException catch (e) {
+      // Jika gagal, tampilkan pesan error
+      setState(() {
+        _errorMessage = e.message ?? "Error tidak diketahui";
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = "Terjadi error yang tidak diketahui.";
+      });
+    }
+
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
-  void _forgotPassword() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Fitur lupa password belum tersedia.'),
-      ),
-    );
-  }
+  // --- FUNGSI _register() SUDAH DIHAPUS DARI SINI ---
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Login'),
+        title: const Text('Login'), // Judul lebih singkat
         leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: _cancel,
+          icon: const Icon(Icons.arrow_back_ios_new),
+          onPressed: () => context.pop(), // Tombol kembali
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Icon(Icons.lock_outline, size: 64, color: theme.colorScheme.secondary),
-              const SizedBox(height: 16),
-              Text(
-                'Masuk untuk menyimpan favorit dan melanjutkan history baca.',
-                style: theme.textTheme.titleMedium,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
-              TextFormField(
-                controller: _usernameController,
-                decoration: const InputDecoration(
-                  labelText: 'Username atau Email',
-                  prefixIcon: Icon(Icons.person_outline),
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Username tidak boleh kosong';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _passwordController,
-                obscureText: _obscurePassword,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      });
-                    },
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 400), // Batasi lebar
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // --- Field Email ---
+                TextField(
+                  controller: _emailController,
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.email),
                   ),
+                  keyboardType: TextInputType.emailAddress,
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Password tidak boleh kosong';
-                  }
-                  if (value.length < 6) {
-                    return 'Password minimal 6 karakter';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 8),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: _isProcessing ? null : _forgotPassword,
-                  child: const Text('Lupa Password?'),
+                const SizedBox(height: 16),
+
+                // --- Field Password ---
+                TextField(
+                  controller: _passwordController,
+                  decoration: const InputDecoration(
+                    labelText: 'Password',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.lock),
+                  ),
+                  obscureText: true,
                 ),
-              ),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isProcessing ? null : _simulateLogin,
-                  child: _isProcessing
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Login Sekarang'),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextButton(
-                onPressed:
-                    _isProcessing ? null : () => _navigateToRegister(),
-                child: const Text('Belum punya akun? Daftar'),
-              ),
-              TextButton(
-                onPressed: _isProcessing ? null : _cancel,
-                child: const Text('Batal'),
-              ),
-            ],
+                const SizedBox(height: 24),
+
+                // --- Tampilkan Pesan Error jika ada ---
+                if (_errorMessage != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16.0),
+                    child: Text(
+                      _errorMessage!,
+                      style: const TextStyle(color: Colors.redAccent),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+
+                // --- Tombol Aksi ---
+                _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // --- Tombol Login ---
+                          ElevatedButton(
+                            onPressed: _login,
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              backgroundColor:
+                                  Theme.of(context).colorScheme.primary,
+                              foregroundColor:
+                                  Theme.of(context).colorScheme.onPrimary,
+                            ),
+                            child: const Text('Login'),
+                          ),
+                          const SizedBox(height: 12),
+
+                          // --- PERUBAHAN DI SINI ---
+                          OutlinedButton(
+                            onPressed: () {
+                              // Pindah ke halaman register Anda
+                              context.push('/register');
+                            },
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                            ),
+                            child: const Text('Daftar Akun Baru'),
+                          ),
+                          // --- AKHIR PERUBAHAN ---
+                        ],
+                      ),
+              ],
+            ),
           ),
         ),
       ),
