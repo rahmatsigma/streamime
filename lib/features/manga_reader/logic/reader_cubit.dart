@@ -13,7 +13,7 @@ class ReaderCubit extends Cubit<ReaderState> {
 
     result.fold(
       (failure) => emit(ReaderError(failure.toString())),
-      (pageUrls) => emit(ReaderLoaded(pageUrls)),
+      (chapterData) => emit(ReaderLoaded(chapterData)),
     );
   }
 }

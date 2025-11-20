@@ -7,7 +7,7 @@ class ReaderRepositoryImpl implements IReaderRepository {
   final Dio dio = DioClient().dio;
 
   @override
-  Future<Either<Failure, PageUrlList>> getChapterPages(
+  Future<Either<Failure, Map<String, dynamic>>> getChapterPages(
       String chapterId) async {
     try {
       // 1. Panggil endpoint /at-home/server/{id}
@@ -18,6 +18,7 @@ class ReaderRepositoryImpl implements IReaderRepository {
         final String baseUrl = response.data['baseUrl'];
         final String hash = response.data['chapter']['hash'];
         final List<dynamic> pageFilenames = response.data['chapter']['data'];
+        final String title = response.data['chapter']['title'] ?? 'No Title';
 
         // 3. Bangun (construct) daftar URL gambar
         final PageUrlList pageUrls = [];
@@ -28,7 +29,10 @@ class ReaderRepositoryImpl implements IReaderRepository {
         }
 
         // 4. Kembalikan daftar URL yang sudah lengkap
-        return Right(pageUrls);
+        return Right({
+          'title': title,
+          'pages': pageUrls,
+        });
       } else {
         return Left(Exception('Gagal memuat data server chapter'));
       }

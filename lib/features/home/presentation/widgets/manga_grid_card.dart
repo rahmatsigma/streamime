@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:manga_read/core/image_proxy.dart';
 
 class MangaGridCard extends StatelessWidget {
   final String title;
@@ -21,7 +22,7 @@ class MangaGridCard extends StatelessWidget {
           
           // 1. Gambar Cover (Latar Belakang)
           Image.network(
-            coverUrl,
+            ImageProxy.proxy(coverUrl),
             fit: BoxFit.cover,
             
             // (Opsional tapi sangat disarankan) Tampilkan loading

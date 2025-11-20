@@ -11,10 +11,10 @@ class ReaderInitial extends ReaderState {}
 class ReaderLoading extends ReaderState {}
 
 class ReaderLoaded extends ReaderState {
-  final List<String> pageUrls;
-  const ReaderLoaded(this.pageUrls);
+  final Map<String, dynamic> chapter;
+  const ReaderLoaded(this.chapter);
   @override
-  List<Object> get props => [pageUrls];
+  List<Object> get props => [chapter];
 }
 
 class ReaderError extends ReaderState {

@@ -6,6 +6,7 @@ import 'package:manga_read/features/home/data/repositories/i_manga_repository.da
 import 'package:manga_read/features/home/logic/manga_list_cubit.dart';
 import 'package:manga_read/features/home/logic/manga_list_state.dart';
 import 'package:manga_read/features/home/presentation/widgets/manga_grid_card.dart';
+import 'package:manga_read/core/image_proxy.dart';
 import 'package:sizer/sizer.dart';
 
 // --- IMPORT BARU UNTUK FIREBASE AUTH ---
@@ -71,21 +72,6 @@ class _HomePageState extends State<HomePage> {
     _debounce?.cancel();
 
     super.dispose();
-  }
-
-  String _getBestTitle(dynamic mangaData) {
-    try {
-      final attributes = mangaData['attributes'];
-      if (attributes == null) return 'No Title (Attr Null)';
-      final titleMap = attributes['title'] as Map<String, dynamic>?;
-      if (titleMap == null || titleMap.isEmpty) return 'No Title (Map Null)';
-      if (titleMap.containsKey('en')) return titleMap['en'];
-      if (titleMap.containsKey('ja-ro')) return titleMap['ja-ro'];
-      if (titleMap.containsKey('ja')) return titleMap['ja'];
-      return titleMap.values.first;
-    } catch (e) {
-      return 'No Title (Error)';
-    }
   }
 
   Widget _buildSearchBar() {
@@ -485,19 +471,9 @@ class _HomePageState extends State<HomePage> {
             }
 
             final manga = mangaList[index];
-            final String title = _getBestTitle(manga);
-            String coverUrl = '';
-            String mangaId = manga['id'];
-
-            try {
-              final coverRel = (manga['relationships'] as List<dynamic>)
-                  .firstWhere((rel) => rel['type'] == 'cover_art');
-              final String fileName = coverRel['attributes']['fileName'];
-              coverUrl =
-                  'https://uploads.mangadex.org/covers/$mangaId/$fileName.512.jpg';
-            } catch (e) {
-              coverUrl = 'placeholder_url_error';
-            }
+            final String title = manga['title'];
+            final String coverUrl = manga['coverUrl'];
+            final String mangaId = manga['id'];
 
             return GestureDetector(
               onTap: () {
@@ -506,7 +482,7 @@ class _HomePageState extends State<HomePage> {
               child: MangaGridCard(
                 key: ValueKey(mangaId),
                 title: title,
-                coverUrl: coverUrl,
+                coverUrl: ImageProxy.proxy(coverUrl),
               ),
             );
           },

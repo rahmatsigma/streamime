@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
+import 'package:manga_read/core/api/exceptions.dart';
 
-typedef Failure = dynamic;
+typedef Failure = ApiException;
 typedef MangaList = List<dynamic>;
 
 abstract class IMangaRepository {

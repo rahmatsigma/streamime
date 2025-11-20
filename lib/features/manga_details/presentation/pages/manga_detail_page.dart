@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart'; // Import GoRouter untuk tombol back
 import 'package:manga_read/features/manga_details/data/repositories/manga_detail_repository_impl.dart';
 import 'package:manga_read/features/manga_details/logic/manga_detail_cubit.dart';
 import 'package:manga_read/features/manga_details/logic/manga_detail_state.dart';
+import 'package:manga_read/core/image_proxy.dart';
 
 // Helper extension untuk membuat huruf pertama kapital (cth: 'safe' -> 'Safe')
 extension StringExtension on String {
@@ -16,89 +17,6 @@ extension StringExtension on String {
 class MangaDetailPage extends StatelessWidget {
   final String mangaId;
   const MangaDetailPage({Key? key, required this.mangaId}) : super(key: key);
-
-
-  String _getBestDescription(dynamic mangaData) {
-    try {
-      final descMap =
-          mangaData['attributes']['description'] as Map<String, dynamic>?;
-      if (descMap == null || descMap.isEmpty) return 'No description available.';
-
-      String descriptionText = 'No description available.';
-
-      if (descMap.containsKey('en')) {
-        descriptionText = descMap['en'];
-      } else if (descMap.containsKey('id')) {
-        descriptionText = descMap['id']; 
-      } else if (descMap.isNotEmpty) {
-        descriptionText = descMap.values.first;
-      }
-      if (descriptionText.contains('**Links:**')) {
-        descriptionText = descriptionText.split('**Links:**')[0];
-      } 
-      else if (descriptionText.contains('---')) {
-        descriptionText = descriptionText.split('---')[0];
-      }
-      
-      return descriptionText.trim(); 
-
-    } catch (e) {
-      return 'Error parsing description.';
-    }
-  }
-
-  // Helper function untuk judul (sudah ada)
-  String _getBestTitle(dynamic mangaData) {
-    try {
-      final titleMap =
-          mangaData['attributes']['title'] as Map<String, dynamic>?;
-      if (titleMap == null || titleMap.isEmpty) return 'No Title';
-      if (titleMap.containsKey('en')) return titleMap['en'];
-      if (titleMap.containsKey('ja-ro')) return titleMap['ja-ro'];
-      return titleMap.values.first;
-    } catch (e) {
-      return 'No Title';
-    }
-  }
-
-  // --- HELPER BARU: Get Cover URL ---
-  String _getCoverUrl(dynamic mangaData) {
-    try {
-      final String mangaId = mangaData['id'];
-      // Cari relationship 'cover_art'
-      final coverRel = (mangaData['relationships'] as List<dynamic>)
-          .firstWhere((rel) => rel['type'] == 'cover_art');
-      // Ambil nama file dari atributnya (ini bisa kita lakukan berkat 'includes[]')
-      final String fileName = coverRel['attributes']['fileName'];
-      // Bangun URL lengkap
-      return 'https://uploads.mangadex.org/covers/$mangaId/$fileName.512.jpg';
-    } catch (e) {
-      return 'placeholder_url_error'; // URL error jika gagal
-    }
-  }
-
-  // --- HELPER BARU: Get Genres (Tags) ---
-  List<String> _getGenres(dynamic mangaData) {
-    try {
-      final tagsList = (mangaData['attributes']['tags'] as List<dynamic>);
-      final List<String> genres = [];
-
-      for (var tag in tagsList) {
-        // Kita bisa ambil 'genre', 'format', 'theme'
-        final String group = tag['attributes']['group'];
-        if (group == 'genre' || group == 'theme' || group == 'format') {
-          genres.add(tag['attributes']['name']['en']);
-        }
-      }
-      // Tambahkan juga info rating
-      final String contentRating = mangaData['attributes']['contentRating'];
-      genres.add('Rating: ${contentRating.capitalize()}');
-
-      return genres;
-    } catch (e) {
-      return []; // Kembalikan list kosong jika error
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -137,10 +55,10 @@ class MangaDetailPage extends StatelessWidget {
               // --- AKHIR PERUBAHAN ---
 
               // Ekstrak semua data yang kita butuhkan
-              final String title = _getBestTitle(manga);
-              final String description = _getBestDescription(manga);
-              final String coverUrl = _getCoverUrl(manga);
-              final List<String> genres = _getGenres(manga);
+              final String title = manga['title'];
+              final String description = manga['description'];
+              final String coverUrl = manga['coverUrl'];
+              final List<String> genres = manga['genres'];
 
               // Gunakan LayoutBuilder untuk UI Responsif
               return LayoutBuilder(
@@ -230,7 +148,7 @@ class MangaDetailPage extends StatelessWidget {
         width: 250, // Lebar tetap
         height: 250 * 1.4, // Rasio aspek gambar
         child: Image.network(
-          coverUrl,
+          ImageProxy.proxy(coverUrl),
           fit: BoxFit.cover,
           loadingBuilder: (context, child, progress) {
             return progress == null
@@ -352,26 +270,14 @@ class MangaDetailPage extends StatelessWidget {
         itemCount: chapterList.length,
         itemBuilder: (context, index) {
           final chapter = chapterList[index];
-          final attributes = chapter['attributes'];
-
-          // Buat judul chapter yang rapi
-          final String chapterNum = attributes['chapter'] ?? 'N/A';
-          final String chapterTitle = attributes['title'] ?? 'No Title';
-          final String displayText = chapterTitle.isNotEmpty 
-              ? 'Chapter $chapterNum: $chapterTitle'
-              : 'Chapter $chapterNum';
-
-          final String langCode = attributes['translatedLanguage'] ?? '??';
-          final String langDisplay = langCode.toUpperCase(); // Tampilkan (EN, ID, dll)
+          final String chapterId = chapter['id'];
+          final String chapterTitle = chapter['title'];
+          final String chapterNumber = chapter['chapter'];
 
           return ListTile(
-            title: Text(displayText),
-            subtitle: Text(
-                'Volume: ${attributes['volume'] ?? 'N/A'}  •  Bahasa: $langDisplay'), // Tampilkan bahasa di sini
+            title: Text('Chapter $chapterNumber: $chapterTitle'),
             leading: const Icon(Icons.book_outlined),
-            trailing: Text(langDisplay, style: TextStyle(color: Colors.grey.shade400, fontSize: 12)), // Atau taruh di sini
             onTap: () {
-              final String chapterId = chapter['id'];
               context.push('/reader/$chapterId');
             },
           );

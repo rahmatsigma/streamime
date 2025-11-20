@@ -5,5 +5,5 @@ typedef PageUrlList = List<String>; // Kita hanya butuh daftar URL gambar
 
 abstract class IReaderRepository {
   // Fungsi ini akan mengembalikan daftar URL gambar yang sudah jadi
-  Future<Either<Failure, PageUrlList>> getChapterPages(String chapterId);
+  Future<Either<Failure, Map<String, dynamic>>> getChapterPages(String chapterId);
 }

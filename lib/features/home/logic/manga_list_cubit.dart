@@ -22,7 +22,7 @@ class MangaListCubit extends Cubit<MangaListState> {
     final result = await _repository.getPopularManga(page: _currentPage);
 
     result.fold(
-      (failure) => emit(MangaListError(failure.toString())),
+      (failure) => emit(MangaListError(failure.message)),
       (mangaList) => emit(MangaListLoaded(
         mangaList: mangaList,
         hasReachedMax: mangaList.isEmpty,
@@ -84,7 +84,7 @@ class MangaListCubit extends Cubit<MangaListState> {
     final result = await _repository.searchManga(query: query);
 
     result.fold(
-      (failure) => emit(MangaListError(failure.toString())),
+      (failure) => emit(MangaListError(failure.message)),
       (mangaList) {
         // Tampilkan hasil search
         emit(MangaListLoaded(
