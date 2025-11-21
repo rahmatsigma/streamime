@@ -1,35 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart'; // Import GoRouter untuk tombol back
-import 'package:manga_read/features/manga_details/data/repositories/manga_detail_repository_impl.dart';
+import 'package:go_router/go_router.dart';
+import 'package:manga_read/features/home/data/repositories/i_manga_repository.dart'; // Gunakan Repo Utama
 import 'package:manga_read/features/manga_details/logic/manga_detail_cubit.dart';
 import 'package:manga_read/features/manga_details/logic/manga_detail_state.dart';
-import 'package:manga_read/core/image_proxy.dart';
-
-// Helper extension untuk membuat huruf pertama kapital (cth: 'safe' -> 'Safe')
-extension StringExtension on String {
-  String capitalize() {
-    if (this.isEmpty) return "";
-    return "${this[0].toUpperCase()}${this.substring(1).toLowerCase()}";
-  }
-}
+import 'package:manga_read/models/manga.dart'; // Gunakan Model Manga Baru
 
 class MangaDetailPage extends StatelessWidget {
   final String mangaId;
-  const MangaDetailPage({Key? key, required this.mangaId}) : super(key: key);
+  const MangaDetailPage({super.key, required this.mangaId});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => MangaDetailCubit(MangaDetailRepositoryImpl())
-        ..fetchMangaDetails(mangaId), // Langsung panggil fetch detail
+      create: (context) => MangaDetailCubit(
+        // Inject Repository Utama yang sudah ada di main.dart
+        context.read<IMangaRepository>(),
+      )..getMangaDetail(mangaId),
       child: Scaffold(
-        // AppBar baru dengan tombol back
         appBar: AppBar(
           title: const Text('Detail Manga'),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_new),
-            onPressed: () => context.pop(), // Fungsi GoRouter untuk kembali
+            onPressed: () => context.pop(),
           ),
         ),
         body: BlocBuilder<MangaDetailCubit, MangaDetailState>(
@@ -39,40 +32,34 @@ class MangaDetailPage extends StatelessWidget {
             }
 
             if (state is MangaDetailError) {
-              return Center(child: Text('Error: ${state.message}'));
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                    const SizedBox(height: 16),
+                    Text('Error: ${state.message}', textAlign: TextAlign.center),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () => context.read<MangaDetailCubit>().getMangaDetail(mangaId),
+                      child: const Text("Coba Lagi"),
+                    )
+                  ],
+                ),
+              );
             }
 
             if (state is MangaDetailLoaded) {
-              final manga = state.manga;
-
-              // --- PERUBAHAN ---
-              // Trigger pengambilan chapter jika datanya belum ada
-              if (state.chapters == null &&
-                  !state.chaptersLoading &&
-                  state.chapterErrorMessage == null) {
-                context.read<MangaDetailCubit>().fetchMangaChapters(mangaId);
-              }
-              // --- AKHIR PERUBAHAN ---
-
-              // Ekstrak semua data yang kita butuhkan
-              final String title = manga['title'];
-              final String description = manga['description'];
-              final String coverUrl = manga['coverUrl'];
-              final List<String> genres = manga['genres'];
+              final Manga manga = state.manga; // Ini sekarang Object Manga, bukan Map lagi
 
               // Gunakan LayoutBuilder untuk UI Responsif
               return LayoutBuilder(
                 builder: (context, constraints) {
-                  // Jika layar lebar (web/desktop), tampilkan 2 kolom
                   bool isDesktop = constraints.maxWidth > 700;
-
                   if (isDesktop) {
-                    return _buildDesktopLayout(context, title, description,
-                        coverUrl, genres, state); // <-- Pass 'state'
+                    return _buildDesktopLayout(context, manga);
                   } else {
-                    // Jika layar sempit (HP), tampilkan 1 kolom
-                    return _buildMobileLayout(context, title, description,
-                        coverUrl, genres, state); // <-- Pass 'state'
+                    return _buildMobileLayout(context, manga);
                   }
                 },
               );
@@ -85,92 +72,68 @@ class MangaDetailPage extends StatelessWidget {
     );
   }
 
-  // --- WIDGET LAYOUT BARU: Mobile (1 kolom) ---
-  Widget _buildMobileLayout(
-      BuildContext context,
-      String title,
-      String description,
-      String coverUrl,
-      List<String> genres,
-      MangaDetailLoaded state) { // <-- Terima 'state'
+  // --- MOBILE LAYOUT ---
+  Widget _buildMobileLayout(BuildContext context, Manga manga) {
     return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Cover Image
-            Center(child: _buildCoverImage(coverUrl)),
-            const SizedBox(height: 24),
-            // Info Section
-            _buildInfoSection(context, title, description,
-                genres, state), // <-- Pass 'state'
-          ],
-        ),
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(child: _buildCoverImage(manga.imageUrl)),
+          const SizedBox(height: 24),
+          _buildInfoSection(context, manga),
+        ],
       ),
     );
   }
 
-  // --- WIDGET LAYOUT BARU: Desktop (2 kolom) ---
-  Widget _buildDesktopLayout(
-      BuildContext context,
-      String title,
-      String description,
-      String coverUrl,
-      List<String> genres,
-      MangaDetailLoaded state) { // <-- Terima 'state'
+  // --- DESKTOP LAYOUT ---
+  Widget _buildDesktopLayout(BuildContext context, Manga manga) {
     return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 48.0, vertical: 24.0),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Kolom Kiri: Cover Image
-            _buildCoverImage(coverUrl),
-            const SizedBox(width: 32),
-            // Kolom Kanan: Info (Expanded agar mengisi sisa ruang)
-            Expanded(
-              child: _buildInfoSection(context, title, description, genres,
-                  state), // <-- Pass 'state'
-            ),
-          ],
-        ),
+      padding: const EdgeInsets.symmetric(horizontal: 48.0, vertical: 24.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildCoverImage(manga.imageUrl),
+          const SizedBox(width: 32),
+          Expanded(child: _buildInfoSection(context, manga)),
+        ],
       ),
     );
   }
 
-  // --- WIDGET REUSABLE: Cover Image ---
+  // --- WIDGET COVER ---
   Widget _buildCoverImage(String coverUrl) {
     return Card(
-      elevation: 4,
+      elevation: 8,
       clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: SizedBox(
-        width: 250, // Lebar tetap
-        height: 250 * 1.4, // Rasio aspek gambar
+        width: 200,
+        height: 300,
         child: Image.network(
-          ImageProxy.proxy(coverUrl),
+          coverUrl, // Sudah di-proxy di Model/Repo, jadi aman langsung pakai
           fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.broken_image, size: 40, color: Colors.grey),
+                Text("No Image", style: TextStyle(color: Colors.grey)),
+              ],
+            ),
+          ),
           loadingBuilder: (context, child, progress) {
-            return progress == null
-                ? child
-                : const Center(child: CircularProgressIndicator());
-          },
-          errorBuilder: (context, error, stack) {
-            // Tampilkan icon jika gambar gagal dimuat
-            return const Center(child: Icon(Icons.broken_image, size: 50));
+            if (progress == null) return child;
+            return const Center(child: CircularProgressIndicator());
           },
         ),
       ),
     );
   }
 
-  // --- WIDGET REUSABLE: Info Section (Title, Genres, Desc, Chapters) ---
-  Widget _buildInfoSection(
-      BuildContext context,
-      String title,
-      String description,
-      List<String> genres,
-      MangaDetailLoaded state) { // <-- Terima 'state'
+  // --- WIDGET INFO ---
+  Widget _buildInfoSection(BuildContext context, Manga manga) {
     final textTheme = Theme.of(context).textTheme;
 
     return Column(
@@ -178,110 +141,81 @@ class MangaDetailPage extends StatelessWidget {
       children: [
         // Judul
         Text(
-          title,
+          manga.title,
           style: textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
-        const SizedBox(height: 24),
-
-        // Genres (Tags)
-        Text('Genres & Tags', style: textTheme.titleLarge),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 8.0,
-          runSpacing: 4.0,
-          children: genres
-              .map((genre) => Chip(
-                    label: Text(genre),
-                    backgroundColor:
-                        Theme.of(context).chipTheme.secondarySelectedColor,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  ))
-              .toList(),
-        ),
-        const SizedBox(height: 24),
-
-        // Deskripsi
-        Text('Deskripsi', style: textTheme.titleLarge),
-        const SizedBox(height: 12),
-        Text(
-          description,
-          style: textTheme.bodyLarge,
-        ),
-
-        // --- KODE BARU UNTUK CHAPTER ---
-        const SizedBox(height: 24),
-        const Divider(), // Pemisah
+        if (manga.titleEnglish != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            manga.titleEnglish!,
+            style: textTheme.titleMedium?.copyWith(color: Colors.grey),
+          ),
+        ],
+        
         const SizedBox(height: 16),
 
-        // Judul bagian Chapter
-        Text('Chapters', style: textTheme.titleLarge),
-        const SizedBox(height: 12),
+        // Status & Type Badges
+        Row(
+          children: [
+            if (manga.status != null) _buildBadge(context, manga.status!, Colors.green),
+            if (manga.type != null) ...[
+              const SizedBox(width: 8),
+              _buildBadge(context, manga.type!, Colors.blue),
+            ],
+          ],
+        ),
 
-        // Widget baru untuk menampilkan daftar chapter
-        _buildChapterList(context, state),
-        // --- AKHIR KODE BARU ---
+        const SizedBox(height: 24),
 
-        const SizedBox(height: 24), // Spasi di bawah
+        // Genres
+        Text('Genres', style: textTheme.titleLarge),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8.0,
+          runSpacing: 8.0,
+          children: manga.genres.map((genre) => Chip(
+            label: Text(genre),
+            padding: const EdgeInsets.all(0),
+            visualDensity: VisualDensity.compact,
+          )).toList(),
+        ),
+
+        const SizedBox(height: 24),
+
+        // Sinopsis
+        Text('Sinopsis', style: textTheme.titleLarge),
+        const SizedBox(height: 8),
+        Text(
+          manga.synopsis ?? 'Tidak ada deskripsi.',
+          style: textTheme.bodyLarge?.copyWith(height: 1.5),
+        ),
+
+        const SizedBox(height: 24),
+        const Divider(),
+        
+        // Disini nanti tempat List Chapter
+        // (Sementara kita kosongkan dulu agar tidak error logic)
+        const Center(
+          child: Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text("List Chapter akan segera hadir...", style: TextStyle(color: Colors.grey)),
+          ),
+        ),
       ],
     );
   }
 
-  // --- WIDGET HELPER BARU: Daftar Chapter ---
-  /// Widget helper untuk membangun daftar chapter
-  Widget _buildChapterList(BuildContext context, MangaDetailLoaded state) {
-    // 1. Tampilkan loading
-    if (state.chaptersLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    // 2. Tampilkan error
-    if (state.chapterErrorMessage != null) {
-      return Center(
-        child: Text(
-          'Gagal memuat chapter: ${state.chapterErrorMessage}',
-          style: const TextStyle(color: Colors.redAccent),
-        ),
-      );
-    }
-
-    // 3. Jika data belum ada (tapi tidak loading/error), jangan tampilkan apa-apa
-    if (state.chapters == null) {
-      return const SizedBox.shrink();
-    }
-
-    // 4. Jika daftar chapter kosong
-    if (state.chapters!.isEmpty) {
-      return const Center(child: Text('Tidak ada chapter (B. Inggris) ditemukan.'));
-    }
-
-    final chapterList = state.chapters!;
-
-    // 5. Tampilkan ListView!
-    // Kita batasi tingginya agar tidak mengacaukan layout SingleChildScrollView
+  Widget _buildBadge(BuildContext context, String text, Color color) {
     return Container(
-      height: 400, // Beri tinggi maksimal untuk daftar chapter
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade800),
-        borderRadius: BorderRadius.circular(8),
+        color: color.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.5)),
       ),
-      child: ListView.builder(
-        shrinkWrap: true, // Penting di dalam Column/SingleChildScrollView
-        itemCount: chapterList.length,
-        itemBuilder: (context, index) {
-          final chapter = chapterList[index];
-          final String chapterId = chapter['id'];
-          final String chapterTitle = chapter['title'];
-          final String chapterNumber = chapter['chapter'];
-
-          return ListTile(
-            title: Text('Chapter $chapterNumber: $chapterTitle'),
-            leading: const Icon(Icons.book_outlined),
-            onTap: () {
-              context.push('/reader/$chapterId');
-            },
-          );
-        },
+      child: Text(
+        text,
+        style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12),
       ),
     );
   }

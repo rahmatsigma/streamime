@@ -6,13 +6,12 @@ import 'package:manga_read/features/home/data/repositories/i_manga_repository.da
 import 'package:manga_read/features/home/logic/manga_list_cubit.dart';
 import 'package:manga_read/features/home/logic/manga_list_state.dart';
 import 'package:manga_read/features/home/presentation/widgets/manga_grid_card.dart';
-import 'package:manga_read/core/image_proxy.dart';
+// import 'package:manga_read/core/image_proxy.dart'; // Tidak wajib dipakai di sini lagi
 import 'package:sizer/sizer.dart';
 
-// --- IMPORT BARU UNTUK FIREBASE AUTH ---
+// --- IMPORT FIREBASE AUTH ---
 import 'package:manga_read/features/auth/logic/auth_cubit.dart';
 import 'package:manga_read/features/auth/logic/auth_state.dart';
-// --- AKHIR IMPORT BARU ---
 
 enum _ProfileMenuAction { favorites, history, settings, logout }
 
@@ -29,7 +28,7 @@ class _HomePageState extends State<HomePage> {
   Timer? _debounce;
   bool _isSearching = false;
 
-  // TODO: Ganti data dummy ini dengan data dari Cubit/Firestore
+  // Data dummy (Nanti diganti logic backend)
   final List<String> _favoriteManga = [
     'Solo Leveling',
     'Jujutsu Kaisen',
@@ -38,9 +37,6 @@ class _HomePageState extends State<HomePage> {
     'Blue Lock - Ch. 224',
     'Chainsaw Man - Ch. 146',
   ];
-  
-  // Variabel _isLoggedIn LOKAL SUDAH DIHAPUS.
-  // Kita akan mendapatkannya dari AuthCubit
 
   @override
   void initState() {
@@ -70,7 +66,6 @@ class _HomePageState extends State<HomePage> {
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     _debounce?.cancel();
-
     super.dispose();
   }
 
@@ -120,17 +115,16 @@ class _HomePageState extends State<HomePage> {
 
     if (!_isSearching && _searchController.text.isNotEmpty) {
       _searchController.clear();
+      // Reset pencarian jika ditutup (opsional, bisa load ulang popular)
+      // context.read<MangaListCubit>().getPopularManga(); 
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // --- PERUBAHAN ---
-    // Bungkus Scaffold dengan BlocBuilder AuthCubit
+    // Gunakan AuthCubit untuk cek status login
     return BlocBuilder<AuthCubit, AuthState>(
       builder: (context, authState) {
-        
-        // Dapatkan status login saat ini dari AuthCubit
         final bool isLoggedIn = authState.status == AuthStatus.authenticated;
 
         return Scaffold(
@@ -169,8 +163,7 @@ class _HomePageState extends State<HomePage> {
               Padding(
                 padding:
                     const EdgeInsets.only(right: 16.0, top: 8, bottom: 8),
-                // Kirim status login ke menu profil
-                child: _buildProfileMenu(isLoggedIn), 
+                child: _buildProfileMenu(isLoggedIn),
               ),
             ],
           ),
@@ -205,7 +198,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // --- PERUBAHAN: Terima 'isLoggedIn' sebagai parameter ---
   Widget _buildProfileMenu(bool isLoggedIn) {
     return PopupMenuButton<_ProfileMenuAction>(
       tooltip: 'Buka menu profil',
@@ -214,7 +206,6 @@ class _HomePageState extends State<HomePage> {
       color: const Color(0xFF1F1F24),
       constraints: const BoxConstraints(minWidth: 260),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      // --- PERUBAHAN: Kirim status login ke handler ---
       onSelected: (action) => _handleProfileMenuSelection(action, isLoggedIn),
       itemBuilder: (context) {
         final entries = <PopupMenuEntry<_ProfileMenuAction>>[
@@ -223,7 +214,6 @@ class _HomePageState extends State<HomePage> {
             child: _buildMenuTile(
               icon: Icons.favorite_border,
               title: 'Favorite',
-              // --- PERUBAHAN: Gunakan 'isLoggedIn' ---
               subtitle: !isLoggedIn
                   ? 'Login untuk menyimpan favorite.'
                   : _favoriteManga.isEmpty
@@ -237,7 +227,6 @@ class _HomePageState extends State<HomePage> {
             child: _buildMenuTile(
               icon: Icons.history,
               title: 'History Baca',
-              // --- PERUBAHAN: Gunakan 'isLoggedIn' ---
               subtitle: !isLoggedIn
                   ? 'Login untuk melihat history.'
                   : _readingHistory.isEmpty
@@ -256,7 +245,6 @@ class _HomePageState extends State<HomePage> {
           ),
         ];
 
-        // --- PERUBAHAN: Gunakan 'isLoggedIn' ---
         if (isLoggedIn) {
           entries.addAll([
             const PopupMenuDivider(height: 12),
@@ -276,10 +264,10 @@ class _HomePageState extends State<HomePage> {
                         color: Colors.redAccent, size: 20),
                   ),
                   const SizedBox(width: 12),
-                  Expanded(
+                  const Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
+                      children: [
                         Text(
                           'Logout',
                           style: TextStyle(
@@ -353,8 +341,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // --- FUNGSI INI DIUBAH TOTAL ---
-  // Fungsi ini sekarang hanya 'void' dan tidak mengembalikan 'bool'
   void _showLoginDialog() {
     showDialog(
       context: context,
@@ -371,9 +357,7 @@ class _HomePageState extends State<HomePage> {
           ),
           ElevatedButton(
             onPressed: () {
-              // 1. Tutup dialog
               Navigator.of(dialogContext).pop();
-              // 2. Navigasi ke halaman login
               context.push('/login');
             },
             child: const Text('Ke Halaman Login'),
@@ -383,19 +367,16 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // --- FUNGSI INI DIUBAH TOTAL ---
   void _handleProfileMenuSelection(
       _ProfileMenuAction action, bool isLoggedIn) {
-    // Cek otentikasi DULU
     if (action == _ProfileMenuAction.favorites ||
         action == _ProfileMenuAction.history) {
       if (!isLoggedIn) {
-        _showLoginDialog(); // Tampilkan dialog jika belum login
-        return; // Hentikan eksekusi
+        _showLoginDialog();
+        return;
       }
     }
 
-    // Jika sudah login (atau aksi tidak butuh login), lanjutkan
     switch (action) {
       case _ProfileMenuAction.favorites:
         context.push(
@@ -419,9 +400,7 @@ class _HomePageState extends State<HomePage> {
         context.push('/settings');
         break;
       case _ProfileMenuAction.logout:
-        // Panggil fungsi logout dari AuthCubit
-        context.read<AuthCubit>().signOut(); 
-        
+        context.read<AuthCubit>().signOut();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Berhasil logout.')),
         );
@@ -437,12 +416,13 @@ class _HomePageState extends State<HomePage> {
     return Sizer(
       builder: (context, orientation, deviceType) {
         int crossAxisCount;
-        if (deviceType == DeviceType.mobile)
+        if (deviceType == DeviceType.mobile) {
           crossAxisCount = 2;
-        else if (deviceType == DeviceType.tablet)
+        } else if (deviceType == DeviceType.tablet) {
           crossAxisCount = 3;
-        else
+        } else {
           crossAxisCount = 5;
+        }
 
         final int itemCount = isLoadingMore && !hasReachedMax
             ? mangaList.length + 1
@@ -472,17 +452,22 @@ class _HomePageState extends State<HomePage> {
 
             final manga = mangaList[index];
             final String title = manga['title'];
-            final String coverUrl = manga['coverUrl'];
+            
+            // Variabel ini sudah berisi URL Proxy dari Repository (impl.dart)
+            final String coverUrl = manga['coverUrl']; 
             final String mangaId = manga['id'];
 
             return GestureDetector(
               onTap: () {
-                context.push('/manga-detail/$mangaId');
+                print("ID YANG DIKIRIM: $mangaId");
+                final safeId = Uri.encodeComponent(mangaId);
+                
+                context.push('/manga-detail/$safeId');
               },
               child: MangaGridCard(
                 key: ValueKey(mangaId),
                 title: title,
-                coverUrl: ImageProxy.proxy(coverUrl),
+                coverUrl: coverUrl, 
               ),
             );
           },

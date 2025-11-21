@@ -1,52 +1,26 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:manga_read/features/manga_details/data/repositories/i_manga_detail_repository.dart';
-import 'package:manga_read/features/manga_details/logic/manga_detail_state.dart';
+import 'package:manga_read/core/api/exceptions.dart';
+// PENTING: Import Model Manga yang baru
+import 'package:manga_read/models/manga.dart'; 
+// PENTING: Gunakan Repository Utama (karena kita mindahin fungsi detail ke sana)
+import 'package:manga_read/features/home/data/repositories/i_manga_repository.dart'; 
+import 'manga_detail_state.dart';
 
 class MangaDetailCubit extends Cubit<MangaDetailState> {
-  final IMangaDetailRepository _repository;
+  // Gunakan IMangaRepository (bukan DetailRepository lagi)
+  final IMangaRepository _repository; 
 
-  // Terima repository
   MangaDetailCubit(this._repository) : super(MangaDetailInitial());
 
-  // Fungsi untuk memuat data
-  void fetchMangaDetails(String mangaId) async {
+  Future<void> getMangaDetail(String id) async {
     emit(MangaDetailLoading());
-    final result = await _repository.getMangaDetails(mangaId);
+
+    // Panggil fungsi getMangaDetail yang ada di repository utama
+    final result = await _repository.getMangaDetail(id: id);
 
     result.fold(
-      (failure) => emit(MangaDetailError(failure.toString())),
-      (manga) => emit(MangaDetailLoaded(manga)),
+      (failure) => emit(MangaDetailError(failure.message)),
+      (manga) => emit(MangaDetailLoaded(manga)), // manga ini tipe-nya class Manga
     );
   }
-
-  void fetchMangaChapters(String mangaId) async {
-  // Hanya berjalan jika state saat ini adalah MangaDetailLoaded
-  final currentState = state;
-  if (currentState is! MangaDetailLoaded) return;
-
-  // 1. Emit state loading chapter
-  emit(currentState.copyWith(
-    chaptersLoading: true,
-    clearChapterError: true, // Hapus error lama jika ada
-  ));
-
-  // 2. Panggil repository
-  final result = await _repository.getMangaChapters(mangaId);
-
-  // 3. Emit state baru berdasarkan hasil
-  result.fold(
-    (failure) {
-      emit(currentState.copyWith(
-        chaptersLoading: false,
-        chapterErrorMessage: failure.toString(),
-      ));
-    },
-    (chapters) {
-      emit(currentState.copyWith(
-        chaptersLoading: false,
-        chapters: chapters,
-      ));
-    },
-  );
-}
 }

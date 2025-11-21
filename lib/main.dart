@@ -13,31 +13,39 @@ import 'package:manga_read/features/auth/logic/auth_cubit.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  // 1. Instansiasi Repository
   final IMangaRepository mangaRepository = MangaRepositoryImpl();
 
   runApp(
-    MultiBlocProvider(
-      providers: [
-        BlocProvider(
-          create: (context) => MangaListCubit(mangaRepository),
-        ),
-        BlocProvider(
-          create: (context) => ThemeCubit(),
-        ),
-        BlocProvider(
-        create: (context) => AuthCubit(), 
-        lazy: false, 
+    // --- PERUBAHAN PENTING DISINI ---
+    // Kita harus menyuntikkan (Inject) Repository ke seluruh aplikasi
+    // Supaya bisa dipanggil pakai context.read<IMangaRepository>() di halaman manapun
+    RepositoryProvider<IMangaRepository>.value(
+      value: mangaRepository,
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (context) => MangaListCubit(mangaRepository),
+          ),
+          BlocProvider(
+            create: (context) => ThemeCubit(),
+          ),
+          BlocProvider(
+            create: (context) => AuthCubit(),
+            lazy: false,
+          ),
+        ],
+        child: const MangaReadApp(),
       ),
-      ],
-      child: const MangaReadApp(),
     ),
+    // --- AKHIR PERUBAHAN ---
   );
 }
-
-
 
 class MangaReadApp extends StatelessWidget {
   const MangaReadApp({super.key});
