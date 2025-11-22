@@ -1,0 +1,38 @@
+name: Deploy Mangaread Web
+
+on:
+  push:
+    branches:
+      - main # Pastikan branch utama kamu bernama 'main'. Jika 'master', ganti jadi 'master'
+
+permissions:
+  contents: write # Izin wajib agar bot bisa push ke branch gh-pages
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          flutter-version: '3.35.7' # Kita kunci ke versi kamu agar aman
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      # Build Web dengan base-href sesuai nama repo kamu
+      - name: Build Web Application
+        run: flutter build web --release --base-href "/mangaread/"
+
+      # Deploy ke branch gh-pages
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build/web
