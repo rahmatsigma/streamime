@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:manga_read/features/auth/logic/auth_cubit.dart'; // Import Auth
+import 'package:manga_read/features/auth/logic/auth_state.dart'; // Import Auth State
 import 'package:manga_read/features/home/data/repositories/i_manga_repository.dart';
 import 'package:manga_read/features/manga_details/logic/manga_detail_cubit.dart';
 import 'package:manga_read/features/manga_details/logic/manga_detail_state.dart';
@@ -12,6 +14,12 @@ class MangaDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 1. AMBIL STATUS LOGIN (USER ID)
+    final authState = context.read<AuthCubit>().state;
+    final String? userId = (authState.status == AuthStatus.authenticated) 
+        ? authState.user?.uid 
+        : null;
+
     return BlocProvider(
       create: (context) => MangaDetailCubit(
         context.read<IMangaRepository>(),
@@ -23,6 +31,42 @@ class MangaDetailPage extends StatelessWidget {
             icon: const Icon(Icons.arrow_back_ios_new),
             onPressed: () => context.pop(),
           ),
+          actions: [
+            // BlocBuilder ini mendengarkan perubahan state (misal: loading -> loaded)
+            // dan perubahan status favorite (true/false)
+            BlocBuilder<MangaDetailCubit, MangaDetailState>(
+              builder: (context, state) {
+                bool isFav = false;
+                // Cek apakah data sudah loaded dan apakah statusnya favorite
+                if (state is MangaDetailLoaded) {
+                  isFav = state.isFavorite;
+                }
+
+                return IconButton(
+                  // Kalau fav: Icon Hati Penuh (Merah)
+                  // Kalau bukan: Icon Hati Garis (Putih)
+                  icon: Icon(
+                    isFav ? Icons.favorite : Icons.favorite_border,
+                    color: isFav ? Colors.redAccent : null, 
+                  ),
+                  onPressed: () {
+                    // 1. Cek Status Login
+                    final authState = context.read<AuthCubit>().state;
+                    final isLoggedIn = authState.status == AuthStatus.authenticated;
+
+                    if (isLoggedIn && authState.user != null) {
+                      // 2. Kalau Login: Eksekusi Simpan/Hapus Favorite
+                      context.read<MangaDetailCubit>().toggleFavorite(authState.user!.uid);
+                    } else {
+                      // 3. Kalau Belum Login: Munculkan Dialog
+                      _showLoginRequiredDialog(context);
+                    }
+                  },
+                );
+              },
+            ),
+            const SizedBox(width: 16), // Jarak sedikit dari kanan
+          ],
         ),
         body: BlocBuilder<MangaDetailCubit, MangaDetailState>(
           builder: (context, state) {
@@ -54,10 +98,11 @@ class MangaDetailPage extends StatelessWidget {
               return LayoutBuilder(
                 builder: (context, constraints) {
                   bool isDesktop = constraints.maxWidth > 700;
+                  // Kita kirim userId ke layout agar bisa dipakai saat klik chapter
                   if (isDesktop) {
-                    return _buildDesktopLayout(context, manga);
+                    return _buildDesktopLayout(context, manga, userId);
                   } else {
-                    return _buildMobileLayout(context, manga);
+                    return _buildMobileLayout(context, manga, userId);
                   }
                 },
               );
@@ -71,7 +116,7 @@ class MangaDetailPage extends StatelessWidget {
   }
 
   // --- MOBILE LAYOUT ---
-  Widget _buildMobileLayout(BuildContext context, Manga manga) {
+  Widget _buildMobileLayout(BuildContext context, Manga manga, String? userId) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -79,15 +124,14 @@ class MangaDetailPage extends StatelessWidget {
         children: [
           Center(child: _buildCoverImage(manga.imageUrl)),
           const SizedBox(height: 24),
-          // PERBAIKAN: Panggil _buildInfoSection agar Judul, Genre, & Chapter muncul
-          _buildInfoSection(context, manga), 
+          _buildInfoSection(context, manga, userId),
         ],
       ),
     );
   }
 
   // --- DESKTOP LAYOUT ---
-  Widget _buildDesktopLayout(BuildContext context, Manga manga) {
+  Widget _buildDesktopLayout(BuildContext context, Manga manga, String? userId) {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 48.0, vertical: 24.0),
       child: Row(
@@ -95,7 +139,7 @@ class MangaDetailPage extends StatelessWidget {
         children: [
           _buildCoverImage(manga.imageUrl),
           const SizedBox(width: 32),
-          Expanded(child: _buildInfoSection(context, manga)),
+          Expanded(child: _buildInfoSection(context, manga, userId)),
         ],
       ),
     );
@@ -111,7 +155,7 @@ class MangaDetailPage extends StatelessWidget {
         width: 200,
         height: 300,
         child: Image.network(
-          coverUrl, 
+          coverUrl,
           fit: BoxFit.cover,
           errorBuilder: (_, __, ___) => const Center(
             child: Column(
@@ -131,15 +175,14 @@ class MangaDetailPage extends StatelessWidget {
     );
   }
 
-  // --- WIDGET INFO (JUDUL + SINOPSIS + CHAPTER) ---
-  Widget _buildInfoSection(BuildContext context, Manga manga) {
-    // DISINI KITA DEFINISIKAN textTheme
+  // --- WIDGET INFO ---
+  Widget _buildInfoSection(BuildContext context, Manga manga, String? userId) {
     final textTheme = Theme.of(context).textTheme;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 1. Judul
+        // Judul
         Text(
           manga.title,
           style: textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -154,7 +197,7 @@ class MangaDetailPage extends StatelessWidget {
         
         const SizedBox(height: 16),
 
-        // 2. Status & Type
+        // Status & Type Badges
         Row(
           children: [
             if (manga.status != null) _buildBadge(context, manga.status!, Colors.green),
@@ -167,7 +210,7 @@ class MangaDetailPage extends StatelessWidget {
 
         const SizedBox(height: 24),
 
-        // 3. Genres
+        // Genres
         Text('Genres', style: textTheme.titleLarge),
         const SizedBox(height: 8),
         Wrap(
@@ -182,10 +225,9 @@ class MangaDetailPage extends StatelessWidget {
 
         const SizedBox(height: 24),
 
-        // 4. Sinopsis (Logic Keren Disatukan Disini)
+        // Sinopsis
         Text('Sinopsis', style: textTheme.titleLarge),
         const SizedBox(height: 8),
-        
         if (manga.synopsis != null && manga.synopsis!.isNotEmpty)
           Text(
             manga.synopsis!,
@@ -207,10 +249,7 @@ class MangaDetailPage extends StatelessWidget {
                 SizedBox(height: 8),
                 Text(
                   'Sinopsis belum tersedia untuk komik ini.',
-                  style: TextStyle(
-                    color: Colors.grey, 
-                    fontStyle: FontStyle.italic
-                  ),
+                  style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -221,7 +260,7 @@ class MangaDetailPage extends StatelessWidget {
         const Divider(thickness: 1, color: Colors.white24),
         const SizedBox(height: 16),
         
-        // 5. List Chapter
+        // List Chapter
         Text(
           'Daftar Chapter (${manga.chapterList.length})', 
           style: textTheme.titleLarge
@@ -259,7 +298,14 @@ class MangaDetailPage extends StatelessWidget {
                     : null,
                   trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.white54),
                   onTap: () {
-                    print("Navigasi ke chapter ID: ${chapter['id']}");
+                    // --- LOGIKA BARU: SIMPAN HISTORY JIKA LOGIN ---
+                    context.read<MangaDetailCubit>().saveHistoryIfLoggedIn(
+                      userId, 
+                      chapter['title']
+                    );
+
+                    // Pindah ke halaman baca
+                    print("Membaca chapter ID: ${chapter['id']}");
                     context.push('/read/${chapter['id']}');
                   },
                 ),
@@ -283,6 +329,29 @@ class MangaDetailPage extends StatelessWidget {
       child: Text(
         text,
         style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12),
+      ),
+    );
+  }
+
+  void _showLoginRequiredDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text("Login Diperlukan"),
+        content: const Text("Kamu harus login untuk menambahkan manga ke favorit."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text("Batal"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              context.push('/login'); // Pastikan rute '/login' sudah ada di app_router
+            },
+            child: const Text("Login Sekarang"),
+          ),
+        ],
       ),
     );
   }

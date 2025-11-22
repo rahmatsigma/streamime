@@ -3,10 +3,78 @@ import 'package:dio/dio.dart';
 import 'package:manga_read/core/api/dio_client.dart';
 import 'package:manga_read/core/api/exceptions.dart';
 import 'package:manga_read/features/home/data/repositories/i_manga_repository.dart';
-import 'package:manga_read/models/manga.dart'; 
+import 'package:manga_read/models/manga.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // Wajib ada buat Database
 
 class MangaRepositoryImpl implements IMangaRepository {
   final Dio dio = DioClient().dio;
+
+  // ==========================================
+  // BAGIAN FIRESTORE (DATABASE)
+  // ==========================================
+
+  // 1. Cek apakah manga ini sudah di-love?
+  Future<bool> isMangaFavorite(String uid, String mangaId) async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .collection('favorites')
+          .doc(mangaId)
+          .get();
+      return doc.exists;
+    } catch (e) {
+      print("Error cek favorite: $e");
+      return false;
+    }
+  }
+
+  // 2. Tambah atau Hapus Favorite (Toggle)
+  Future<void> toggleFavorite(String uid, Manga manga, bool isCurrentlyFavorite) async {
+    final docRef = FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .collection('favorites')
+        .doc(manga.id);
+
+    if (isCurrentlyFavorite) {
+      // Kalau sudah ada, hapus (Unlike)
+      await docRef.delete();
+    } else {
+      // Kalau belum ada, simpan (Like)
+      await docRef.set({
+        'id': manga.id,
+        'title': manga.title,
+        'coverUrl': manga.imageUrl,
+        'type': manga.type,
+        'addedAt': FieldValue.serverTimestamp(),
+      });
+    }
+  }
+
+  // 3. Simpan History Baca
+  Future<void> addToHistory(String uid, Manga manga, String chapterTitle) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .collection('history')
+          .doc(manga.id)
+          .set({
+        'mangaId': manga.id,
+        'title': manga.title,
+        'coverUrl': manga.imageUrl,
+        'lastChapter': chapterTitle,
+        'lastReadAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      print("Gagal simpan history: $e");
+    }
+  }
+
+  // ==========================================
+  // BAGIAN API (KOMIKU)
+  // ==========================================
 
   @override
   Future<Either<Failure, MangaList>> getPopularManga({required int page}) async {
@@ -41,7 +109,6 @@ class MangaRepositoryImpl implements IMangaRepository {
     }
   }
 
-  // ... (Sisanya sama, method searchManga dan _extractList tidak perlu diubah) ...
   @override
   Future<Either<Failure, MangaList>> searchManga({required String query}) async {
     try {
@@ -75,10 +142,7 @@ class MangaRepositoryImpl implements IMangaRepository {
   @override
   Future<Either<Failure, Manga>> getMangaDetail({required String id}) async {
     try {
-      // --- LOGIC SEDERHANA: KIRIM ID ANGKA MENTAH-MENTAH ---
-      print(">>> REQUEST DETAIL ID (ANGKA): $id");
-      print(">>> URL: /api/comics/$id");
-      
+      print(">>> REQUEST DETAIL ID: $id");
       final response = await dio.get('/api/comics/$id');
 
       if (response.statusCode == 200) {
@@ -90,10 +154,8 @@ class MangaRepositoryImpl implements IMangaRepository {
       }
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) {
-        return Left(NotFoundException('Manga tidak ditemukan (ID Salah)'));
+        return Left(NotFoundException('Manga tidak ditemukan'));
       }
-      // Print error body biar jelas kalau ada apa-apa
-      print("ERROR SERVER: ${e.response?.data}");
       return Left(ServerException(e.message ?? 'Koneksi bermasalah'));
     } catch (e) {
       return Left(ServerException('Error parsing: $e'));
@@ -104,44 +166,32 @@ class MangaRepositoryImpl implements IMangaRepository {
   Future<Either<Failure, List<String>>> getChapterImages({required String chapterId}) async {
     try {
       print(">>> REQUEST CHAPTER ID: $chapterId");
-      
-      // Endpoint kemungkinan besar ini (berdasarkan pola teman abang)
       final response = await dio.get('/api/chapters/$chapterId');
 
       if (response.statusCode == 200) {
-        // Ambil data dari JSON No. 2 yang abang kirim
-        // { "data": { "images": [ {"url": "..."} ] } }
         final data = response.data['data'];
-        
         List<String> imageUrls = [];
 
         if (data != null && data['images'] is List) {
           final List images = data['images'];
-          
-          // Ambil field 'url' dari setiap item
           imageUrls = images.map((img) {
             return (img['url'] ?? '').toString();
           }).where((url) => url.isNotEmpty).toList();
         }
         
-        // Debug biar keliatan dapet berapa gambar
         print(">>> DAPAT ${imageUrls.length} GAMBAR");
-        
         return Right(imageUrls);
       } else {
         return Left(ServerException('Gagal load chapter: ${response.statusCode}'));
       }
     } on DioException catch (e) {
-      if (e.response?.statusCode == 404) {
-        return Left(NotFoundException('Chapter tidak ditemukan'));
-      }
       return Left(ServerException(e.message ?? 'Error Koneksi'));
     } catch (e) {
       return Left(ServerException('Error parsing: $e'));
     }
   }
-}
 
+  // Helper
   List _extractList(dynamic data) {
     if (data == null) return [];
     if (data is List) return data;
@@ -154,3 +204,4 @@ class MangaRepositoryImpl implements IMangaRepository {
     }
     return [];
   }
+}
