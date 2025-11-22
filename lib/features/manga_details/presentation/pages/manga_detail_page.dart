@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:manga_read/features/home/data/repositories/i_manga_repository.dart'; // Gunakan Repo Utama
+import 'package:manga_read/features/home/data/repositories/i_manga_repository.dart';
 import 'package:manga_read/features/manga_details/logic/manga_detail_cubit.dart';
 import 'package:manga_read/features/manga_details/logic/manga_detail_state.dart';
-import 'package:manga_read/models/manga.dart'; // Gunakan Model Manga Baru
+import 'package:manga_read/models/manga.dart';
 
 class MangaDetailPage extends StatelessWidget {
   final String mangaId;
@@ -14,7 +14,6 @@ class MangaDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => MangaDetailCubit(
-        // Inject Repository Utama yang sudah ada di main.dart
         context.read<IMangaRepository>(),
       )..getMangaDetail(mangaId),
       child: Scaffold(
@@ -52,7 +51,6 @@ class MangaDetailPage extends StatelessWidget {
             if (state is MangaDetailLoaded) {
               final Manga manga = state.manga;
 
-              // Gunakan LayoutBuilder untuk UI Responsif
               return LayoutBuilder(
                 builder: (context, constraints) {
                   bool isDesktop = constraints.maxWidth > 700;
@@ -81,7 +79,8 @@ class MangaDetailPage extends StatelessWidget {
         children: [
           Center(child: _buildCoverImage(manga.imageUrl)),
           const SizedBox(height: 24),
-          _buildInfoSection(context, manga),
+          // PERBAIKAN: Panggil _buildInfoSection agar Judul, Genre, & Chapter muncul
+          _buildInfoSection(context, manga), 
         ],
       ),
     );
@@ -112,7 +111,7 @@ class MangaDetailPage extends StatelessWidget {
         width: 200,
         height: 300,
         child: Image.network(
-          coverUrl, // URL sudah aman (diproyeksi di Model)
+          coverUrl, 
           fit: BoxFit.cover,
           errorBuilder: (_, __, ___) => const Center(
             child: Column(
@@ -132,14 +131,15 @@ class MangaDetailPage extends StatelessWidget {
     );
   }
 
-  // --- WIDGET INFO + CHAPTER LIST ---
+  // --- WIDGET INFO (JUDUL + SINOPSIS + CHAPTER) ---
   Widget _buildInfoSection(BuildContext context, Manga manga) {
+    // DISINI KITA DEFINISIKAN textTheme
     final textTheme = Theme.of(context).textTheme;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Judul
+        // 1. Judul
         Text(
           manga.title,
           style: textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -154,7 +154,7 @@ class MangaDetailPage extends StatelessWidget {
         
         const SizedBox(height: 16),
 
-        // Status & Type Badges
+        // 2. Status & Type
         Row(
           children: [
             if (manga.status != null) _buildBadge(context, manga.status!, Colors.green),
@@ -167,7 +167,7 @@ class MangaDetailPage extends StatelessWidget {
 
         const SizedBox(height: 24),
 
-        // Genres
+        // 3. Genres
         Text('Genres', style: textTheme.titleLarge),
         const SizedBox(height: 8),
         Wrap(
@@ -182,19 +182,46 @@ class MangaDetailPage extends StatelessWidget {
 
         const SizedBox(height: 24),
 
-        // Sinopsis
+        // 4. Sinopsis (Logic Keren Disatukan Disini)
         Text('Sinopsis', style: textTheme.titleLarge),
         const SizedBox(height: 8),
-        Text(
-          manga.synopsis ?? 'Tidak ada deskripsi.',
-          style: textTheme.bodyLarge?.copyWith(height: 1.5),
-        ),
+        
+        if (manga.synopsis != null && manga.synopsis!.isNotEmpty)
+          Text(
+            manga.synopsis!,
+            style: textTheme.bodyLarge?.copyWith(height: 1.5),
+            textAlign: TextAlign.justify,
+          )
+        else
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.grey.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.white10),
+            ),
+            child: const Column(
+              children: [
+                Icon(Icons.description_outlined, color: Colors.grey),
+                SizedBox(height: 8),
+                Text(
+                  'Sinopsis belum tersedia untuk komik ini.',
+                  style: TextStyle(
+                    color: Colors.grey, 
+                    fontStyle: FontStyle.italic
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
 
         const SizedBox(height: 24),
         const Divider(thickness: 1, color: Colors.white24),
         const SizedBox(height: 16),
         
-        // --- BAGIAN LIST CHAPTER (BARU) ---
+        // 5. List Chapter
         Text(
           'Daftar Chapter (${manga.chapterList.length})', 
           style: textTheme.titleLarge
@@ -211,7 +238,6 @@ class MangaDetailPage extends StatelessWidget {
           )
         else
           ListView.builder(
-            // Penting: shrinkWrap & physics agar bisa scroll di dalam SingleChildScrollView
             shrinkWrap: true, 
             physics: const NeverScrollableScrollPhysics(),
             itemCount: manga.chapterList.length,
@@ -233,7 +259,7 @@ class MangaDetailPage extends StatelessWidget {
                     : null,
                   trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.white54),
                   onTap: () {
-                  print("Navigasi ke chapter ID: ${chapter['id']}");
+                    print("Navigasi ke chapter ID: ${chapter['id']}");
                     context.push('/read/${chapter['id']}');
                   },
                 ),
@@ -241,7 +267,7 @@ class MangaDetailPage extends StatelessWidget {
             },
           ),
           
-        const SizedBox(height: 40), // Jarak bawah biar tidak kepotong
+        const SizedBox(height: 40),
       ],
     );
   }
