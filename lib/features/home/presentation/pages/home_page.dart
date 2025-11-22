@@ -6,7 +6,6 @@ import 'package:manga_read/features/home/data/repositories/i_manga_repository.da
 import 'package:manga_read/features/home/logic/manga_list_cubit.dart';
 import 'package:manga_read/features/home/logic/manga_list_state.dart';
 import 'package:manga_read/features/home/presentation/widgets/manga_grid_card.dart';
-// import 'package:manga_read/core/image_proxy.dart'; // Tidak wajib dipakai di sini lagi
 import 'package:sizer/sizer.dart';
 
 // --- IMPORT FIREBASE AUTH ---
@@ -115,14 +114,11 @@ class _HomePageState extends State<HomePage> {
 
     if (!_isSearching && _searchController.text.isNotEmpty) {
       _searchController.clear();
-      // Reset pencarian jika ditutup (opsional, bisa load ulang popular)
-      // context.read<MangaListCubit>().getPopularManga(); 
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Gunakan AuthCubit untuk cek status login
     return BlocBuilder<AuthCubit, AuthState>(
       builder: (context, authState) {
         final bool isLoggedIn = authState.status == AuthStatus.authenticated;
@@ -408,6 +404,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  // --- LOGIC GRID RESPONSIVE YANG DIPERBAIKI ---
   Widget _buildResponsiveGrid(
     MangaList mangaList,
     bool isLoadingMore,
@@ -415,13 +412,16 @@ class _HomePageState extends State<HomePage> {
   ) {
     return Sizer(
       builder: (context, orientation, deviceType) {
+        // Logic Kolom: Gunakan width biar lebih akurat di Browser HP
+        double screenWidth = MediaQuery.of(context).size.width;
         int crossAxisCount;
-        if (deviceType == DeviceType.mobile) {
-          crossAxisCount = 2;
-        } else if (deviceType == DeviceType.tablet) {
-          crossAxisCount = 3;
+        
+        if (screenWidth < 600) {
+          crossAxisCount = 2; // HP: 2 Kolom (Biar Gede)
+        } else if (screenWidth < 900) {
+          crossAxisCount = 3; // Tablet: 3 Kolom
         } else {
-          crossAxisCount = 5;
+          crossAxisCount = 5; // Desktop: 5 Kolom
         }
 
         final int itemCount = isLoadingMore && !hasReachedMax
@@ -430,44 +430,35 @@ class _HomePageState extends State<HomePage> {
 
         return GridView.builder(
           controller: _scrollController,
-          padding: EdgeInsets.all(2.w),
+          padding: EdgeInsets.all(3.w),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
-            childAspectRatio: 0.7,
-            crossAxisSpacing: 2.w,
-            mainAxisSpacing: 2.w,
+            // Rasio 0.65 agar bentuknya persegi panjang (Poster)
+            childAspectRatio: 0.65, 
+            crossAxisSpacing: 3.w,
+            mainAxisSpacing: 3.w,
           ),
           itemCount: itemCount,
           itemBuilder: (context, index) {
             if (index >= mangaList.length) {
-              return const Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 10),
-                  Text("Loading..."),
-                ],
+              return const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: CircularProgressIndicator(),
+                ),
               );
             }
 
             final manga = mangaList[index];
-            final String title = manga['title'];
-            
-            // Variabel ini sudah berisi URL Proxy dari Repository (impl.dart)
-            final String coverUrl = manga['coverUrl']; 
-            final String mangaId = manga['id'];
-
             return GestureDetector(
               onTap: () {
-                print("ID YANG DIKIRIM: $mangaId");
-                final safeId = Uri.encodeComponent(mangaId);
-                
-                context.push('/manga-detail/$safeId');
+                // Kirim ID langsung (Repository sudah handle logic angka)
+                context.push('/manga-detail/${manga['id']}');
               },
               child: MangaGridCard(
-                key: ValueKey(mangaId),
-                title: title,
-                coverUrl: coverUrl, 
+                key: ValueKey(manga['id']),
+                title: manga['title'],
+                coverUrl: manga['coverUrl'],
               ),
             );
           },
