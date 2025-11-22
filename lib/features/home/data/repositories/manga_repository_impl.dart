@@ -75,49 +75,72 @@ class MangaRepositoryImpl implements IMangaRepository {
   @override
   Future<Either<Failure, Manga>> getMangaDetail({required String id}) async {
     try {
-      // --- 1. BERSIHKAN ID (SOLUSI ERROR 400) ---
-      // ID dari API Popular biasanya formatnya: "manga/judul-komik"
-      // Kita harus membuang bagian "manga/" agar tersisa "judul-komik" saja.
+      // --- LOGIC SEDERHANA: KIRIM ID ANGKA MENTAH-MENTAH ---
+      print(">>> REQUEST DETAIL ID (ANGKA): $id");
+      print(">>> URL: /api/comics/$id");
       
-      String cleanId = id;
-      if (cleanId.startsWith('manga/')) {
-        cleanId = cleanId.replaceFirst('manga/', '');
-      } else if (cleanId.startsWith('manhwa/')) {
-        cleanId = cleanId.replaceFirst('manhwa/', '');
-      } else if (cleanId.startsWith('manhua/')) {
-        cleanId = cleanId.replaceFirst('manhua/', '');
-      }
-
-      // Jika ada garis miring di akhir, hapus juga
-      if (cleanId.endsWith('/')) {
-        cleanId = cleanId.substring(0, cleanId.length - 1);
-      }
-
-      print(">>> ID ASLI: $id");
-      print(">>> ID BERSIH: $cleanId"); // <-- Harusnya sisa 'zui-qiang-shen-wang'
-      
-      // --- 2. REQUEST KE ENDPOINT BERSIH ---
-      final response = await dio.get('/api/comics/$cleanId');
+      final response = await dio.get('/api/comics/$id');
 
       if (response.statusCode == 200) {
         final dynamic rawData = response.data['data'] ?? response.data;
-        
-        // Masukkan ke Model Manga
         final mangaDetail = Manga.fromApi(rawData);
-        
         return Right(mangaDetail);
       } else {
         return Left(ServerException('Gagal: Kode ${response.statusCode}'));
       }
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) {
-        return Left(NotFoundException('Manga tidak ditemukan (404)'));
+        return Left(NotFoundException('Manga tidak ditemukan (ID Salah)'));
       }
+      // Print error body biar jelas kalau ada apa-apa
+      print("ERROR SERVER: ${e.response?.data}");
       return Left(ServerException(e.message ?? 'Koneksi bermasalah'));
     } catch (e) {
       return Left(ServerException('Error parsing: $e'));
     }
   }
+
+  @override
+  Future<Either<Failure, List<String>>> getChapterImages({required String chapterId}) async {
+    try {
+      print(">>> REQUEST CHAPTER ID: $chapterId");
+      
+      // Endpoint kemungkinan besar ini (berdasarkan pola teman abang)
+      final response = await dio.get('/api/chapters/$chapterId');
+
+      if (response.statusCode == 200) {
+        // Ambil data dari JSON No. 2 yang abang kirim
+        // { "data": { "images": [ {"url": "..."} ] } }
+        final data = response.data['data'];
+        
+        List<String> imageUrls = [];
+
+        if (data != null && data['images'] is List) {
+          final List images = data['images'];
+          
+          // Ambil field 'url' dari setiap item
+          imageUrls = images.map((img) {
+            return (img['url'] ?? '').toString();
+          }).where((url) => url.isNotEmpty).toList();
+        }
+        
+        // Debug biar keliatan dapet berapa gambar
+        print(">>> DAPAT ${imageUrls.length} GAMBAR");
+        
+        return Right(imageUrls);
+      } else {
+        return Left(ServerException('Gagal load chapter: ${response.statusCode}'));
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        return Left(NotFoundException('Chapter tidak ditemukan'));
+      }
+      return Left(ServerException(e.message ?? 'Error Koneksi'));
+    } catch (e) {
+      return Left(ServerException('Error parsing: $e'));
+    }
+  }
+}
 
   List _extractList(dynamic data) {
     if (data == null) return [];
@@ -131,4 +154,3 @@ class MangaRepositoryImpl implements IMangaRepository {
     }
     return [];
   }
-}

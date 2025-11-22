@@ -18,13 +18,8 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // 1. Instansiasi Repository
   final IMangaRepository mangaRepository = MangaRepositoryImpl();
-
   runApp(
-    // --- PERUBAHAN PENTING DISINI ---
-    // Kita harus menyuntikkan (Inject) Repository ke seluruh aplikasi
-    // Supaya bisa dipanggil pakai context.read<IMangaRepository>() di halaman manapun
     RepositoryProvider<IMangaRepository>.value(
       value: mangaRepository,
       child: MultiBlocProvider(

@@ -50,7 +50,7 @@ class MangaDetailPage extends StatelessWidget {
             }
 
             if (state is MangaDetailLoaded) {
-              final Manga manga = state.manga; // Ini sekarang Object Manga, bukan Map lagi
+              final Manga manga = state.manga;
 
               // Gunakan LayoutBuilder untuk UI Responsif
               return LayoutBuilder(
@@ -112,7 +112,7 @@ class MangaDetailPage extends StatelessWidget {
         width: 200,
         height: 300,
         child: Image.network(
-          coverUrl, // Sudah di-proxy di Model/Repo, jadi aman langsung pakai
+          coverUrl, // URL sudah aman (diproyeksi di Model)
           fit: BoxFit.cover,
           errorBuilder: (_, __, ___) => const Center(
             child: Column(
@@ -132,7 +132,7 @@ class MangaDetailPage extends StatelessWidget {
     );
   }
 
-  // --- WIDGET INFO ---
+  // --- WIDGET INFO + CHAPTER LIST ---
   Widget _buildInfoSection(BuildContext context, Manga manga) {
     final textTheme = Theme.of(context).textTheme;
 
@@ -191,16 +191,57 @@ class MangaDetailPage extends StatelessWidget {
         ),
 
         const SizedBox(height: 24),
-        const Divider(),
+        const Divider(thickness: 1, color: Colors.white24),
+        const SizedBox(height: 16),
         
-        // Disini nanti tempat List Chapter
-        // (Sementara kita kosongkan dulu agar tidak error logic)
-        const Center(
-          child: Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Text("List Chapter akan segera hadir...", style: TextStyle(color: Colors.grey)),
-          ),
+        // --- BAGIAN LIST CHAPTER (BARU) ---
+        Text(
+          'Daftar Chapter (${manga.chapterList.length})', 
+          style: textTheme.titleLarge
         ),
+        const SizedBox(height: 12),
+
+        if (manga.chapterList.isEmpty)
+          const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text(
+              "Belum ada chapter yang tersedia.", 
+              style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic)
+            ),
+          )
+        else
+          ListView.builder(
+            // Penting: shrinkWrap & physics agar bisa scroll di dalam SingleChildScrollView
+            shrinkWrap: true, 
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: manga.chapterList.length,
+            itemBuilder: (context, index) {
+              final chapter = manga.chapterList[index];
+              return Card(
+                color: Colors.grey.withOpacity(0.05),
+                margin: const EdgeInsets.symmetric(vertical: 4),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                child: ListTile(
+                  title: Text(
+                    chapter['title'],
+                    style: const TextStyle(fontWeight: FontWeight.w500),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  subtitle: chapter['date'] != null 
+                    ? Text(chapter['date'], style: const TextStyle(fontSize: 12)) 
+                    : null,
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.white54),
+                  onTap: () {
+                  print("Navigasi ke chapter ID: ${chapter['id']}");
+                    context.push('/read/${chapter['id']}');
+                  },
+                ),
+              );
+            },
+          ),
+          
+        const SizedBox(height: 40), // Jarak bawah biar tidak kepotong
       ],
     );
   }

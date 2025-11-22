@@ -8,7 +8,7 @@ import 'package:manga_read/features/home/presentation/pages/home_page.dart';
 import 'package:manga_read/features/manga_details/presentation/pages/manga_detail_page.dart';
 import 'package:manga_read/features/manga_reader/presentation/pages/reader_page.dart';
 import 'package:manga_read/features/settings/presentation/pages/settings_page.dart';
-// --- IMPORT BARU ---
+import 'package:manga_read/features/chapter_read/presentation/pages/chapter_read_page.dart';
 import 'package:manga_read/features/splash/presentation/pages/splash_screen.dart';
 
 
@@ -40,6 +40,13 @@ class AppRouter {
         builder: (context, state) {
           final String chapterId = state.pathParameters['chapterId']!;
           return ReaderPage(chapterId: chapterId);
+        },
+      ),
+      GoRoute(
+        path: '/read/:chapterId',
+        builder: (context, state) {
+          final chapterId = state.pathParameters['chapterId']!;
+          return ChapterReadPage(chapterId: chapterId);
         },
       ),
       GoRoute(
