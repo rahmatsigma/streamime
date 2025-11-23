@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:manga_read/features/home/data/repositories/i_manga_repository.dart';
-import 'package:manga_read/features/home/data/repositories/manga_repository_impl.dart';
+import 'package:manga_read/features/home/data/repositories/manga_repository_impl.dart'; // Import Impl buat casting
 import 'package:manga_read/features/home/logic/manga_list_cubit.dart';
 import 'package:manga_read/features/home/logic/manga_list_state.dart';
 import 'package:manga_read/features/home/presentation/widgets/manga_grid_card.dart';
@@ -25,16 +25,6 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController _searchController = TextEditingController();
   Timer? _debounce;
   bool _isSearching = false;
-
-  // Data dummy (logic backend)
-  final List<String> _favoriteManga = [
-    'Solo Leveling',
-    'Jujutsu Kaisen',
-  ];
-  final List<String> _readingHistory = [
-    'Blue Lock - Ch. 224',
-    'One Piece - Ch. 1084',
-  ];
 
   @override
   void initState() {
@@ -118,78 +108,105 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthCubit, AuthState>(
-      builder: (context, authState) {
-        final bool isLoggedIn = authState.status == AuthStatus.authenticated;
+    final authState = context.watch<AuthCubit>().state;
+    final bool isLoggedIn = authState.status == AuthStatus.authenticated;
+    final String userName = authState.user?.displayName ?? 'User';
 
-        return Scaffold(
-          appBar: AppBar(
-            toolbarHeight: 96,
-            centerTitle: false,
-            titleSpacing: 16,
-            title: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              child: _isSearching
-                  ? _buildSearchBar()
-                  : const Text(
-                      'MangaRead - Populer',
-                      style:
-                          TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final bool isDesktopOrTablet = screenWidth > 600;
+
+    return Scaffold(
+      appBar: AppBar(
+        toolbarHeight: 96,
+        centerTitle: false,
+        titleSpacing: 16,
+        title: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: _isSearching
+              ? _buildSearchBar()
+              : Row(
+                  children: [
+                    const Text(
+                      'MangaRead',
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
                     ),
-            ),
-            actions: [
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(30),
-                    border: Border.all(color: Colors.white24),
-                  ),
-                  child: IconButton(
-                    icon: Icon(_isSearching ? Icons.close : Icons.search),
-                    tooltip: _isSearching ? 'Tutup pencarian' : 'Cari manga',
-                    onPressed: _toggleSearch,
-                  ),
+                    if (isLoggedIn && isDesktopOrTablet) ...[
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.white10),
+                        ),
+                        child: Text(
+                          'Selamat datang, $userName 👋',
+                          style: const TextStyle(
+                            fontSize: 16, 
+                            color: Colors.white70,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      const Spacer(),
+                    ] else if (!isDesktopOrTablet) ...[
+                    ] else ...[
+                      const Spacer(), 
+                    ]
+                  ],
                 ),
+        ),
+        actions: [
+          Padding(
+            padding:
+                const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(color: Colors.white24),
               ),
-              const SizedBox(width: 8),
-              Padding(
-                padding:
-                    const EdgeInsets.only(right: 16.0, top: 8, bottom: 8),
-                child: _buildProfileMenu(isLoggedIn),
+              child: IconButton(
+                icon: Icon(_isSearching ? Icons.close : Icons.search),
+                tooltip: _isSearching ? 'Tutup pencarian' : 'Cari manga',
+                onPressed: _toggleSearch,
               ),
-            ],
+            ),
           ),
-          body: BlocBuilder<MangaListCubit, MangaListState>(
-            builder: (context, state) {
-              if (state is MangaListLoading) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (state is MangaListError) {
-                return Center(child: Text('Error: ${state.message}'));
-              }
-              if (state is MangaListLoaded) {
-                if (state.mangaList.isEmpty) {
-                  return const Center(
-                    child: Text(
-                      'Tidak ada manga ditemukan.',
-                      style: TextStyle(fontSize: 18, color: Colors.grey),
-                    ),
-                  );
-                }
-                return _buildResponsiveGrid(
-                  state.mangaList,
-                  state.isLoadingMore,
-                  state.hasReachedMax,
-                );
-              }
-              return const Center(child: CircularProgressIndicator());
-            },
+          const SizedBox(width: 8),
+          Padding(
+            padding:
+                const EdgeInsets.only(right: 16.0, top: 8, bottom: 8),
+            child: _buildProfileMenu(isLoggedIn),
           ),
-        );
-      },
+        ],
+      ),
+      body: BlocBuilder<MangaListCubit, MangaListState>(
+        builder: (context, state) {
+          if (state is MangaListLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (state is MangaListError) {
+            return Center(child: Text('Error: ${state.message}'));
+          }
+          if (state is MangaListLoaded) {
+            if (state.mangaList.isEmpty) {
+              return const Center(
+                child: Text(
+                  'Tidak ada manga ditemukan.',
+                  style: TextStyle(fontSize: 18, color: Colors.grey),
+                ),
+              );
+            }
+            return _buildResponsiveGrid(
+              state.mangaList,
+              state.isLoadingMore,
+              state.hasReachedMax,
+            );
+          }
+          return const Center(child: CircularProgressIndicator());
+        },
+      ),
     );
   }
 
@@ -203,11 +220,9 @@ class _HomePageState extends State<HomePage> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       onSelected: (action) => _handleProfileMenuSelection(action, isLoggedIn),
       itemBuilder: (context) {
-        final authState = context.read<AuthCubit>().state;
-        final userId = authState.user?.uid;
-        final repo = context.read<IMangaRepository>() as MangaRepositoryImpl;
+        // Logic untuk teks menu (statis)
+        final List<PopupMenuEntry<_ProfileMenuAction>> entries = [];
 
-        List<PopupMenuEntry<_ProfileMenuAction>> entries = [];        
         entries.add(
           PopupMenuItem<_ProfileMenuAction>(
             value: _ProfileMenuAction.favorites,
@@ -216,14 +231,13 @@ class _HomePageState extends State<HomePage> {
               title: 'Favorite',
               subtitle: !isLoggedIn
                   ? 'Login untuk melihat favorit.'
-                  : 'Lihat koleksi favoritmu', // Teks Statis yang aman
+                  : 'Lihat koleksi favoritmu',
             ),
           ),
         );
 
         entries.add(const PopupMenuDivider(height: 12));
 
-        // 2. MENU HISTORY
         entries.add(
           PopupMenuItem<_ProfileMenuAction>(
             value: _ProfileMenuAction.history,
@@ -232,14 +246,13 @@ class _HomePageState extends State<HomePage> {
               title: 'History Baca',
               subtitle: !isLoggedIn
                   ? 'Login untuk melihat history.'
-                  : 'Lanjutkan bacaan terakhir', // Teks Statis yang aman
+                  : 'Lanjutkan bacaan terakhir',
             ),
           ),
         );
 
         entries.add(const PopupMenuDivider(height: 12));
 
-        // 3. SETTING
         entries.add(
           PopupMenuItem<_ProfileMenuAction>(
             value: _ProfileMenuAction.settings,
@@ -251,7 +264,6 @@ class _HomePageState extends State<HomePage> {
           ),
         );
 
-        // 4. LOGOUT (Kalau Login)
         if (isLoggedIn) {
           entries.addAll([
             const PopupMenuDivider(height: 12),
@@ -374,8 +386,9 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _handleProfileMenuSelection(
-      _ProfileMenuAction action, bool isLoggedIn) {
+  // --- PERBAIKAN UTAMA DI SINI ---
+  // Menghapus parameter 'extra' karena halaman Favorite & History sudah mandiri
+  void _handleProfileMenuSelection(_ProfileMenuAction action, bool isLoggedIn) {
     if (action == _ProfileMenuAction.favorites ||
         action == _ProfileMenuAction.history) {
       if (!isLoggedIn) {
@@ -386,22 +399,10 @@ class _HomePageState extends State<HomePage> {
 
     switch (action) {
       case _ProfileMenuAction.favorites:
-        context.push(
-          '/favorites',
-          extra: {
-            'favorites': List<String>.from(_favoriteManga),
-            'isLoggedIn': isLoggedIn,
-          },
-        );
+        context.push('/favorites'); // Langsung push, tanpa data tambahan
         break;
       case _ProfileMenuAction.history:
-        context.push(
-          '/history',
-          extra: {
-            'history': List<String>.from(_readingHistory),
-            'isLoggedIn': isLoggedIn,
-          },
-        );
+        context.push('/history'); // Langsung push, tanpa data tambahan
         break;
       case _ProfileMenuAction.settings:
         context.push('/settings');
@@ -415,7 +416,6 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  // --- LOGIC GRID RESPONSIVE YANG DIPERBAIKI ---
   Widget _buildResponsiveGrid(
     MangaList mangaList,
     bool isLoadingMore,
@@ -423,16 +423,15 @@ class _HomePageState extends State<HomePage> {
   ) {
     return Sizer(
       builder: (context, orientation, deviceType) {
-        // Logic Kolom: Gunakan width biar lebih akurat di Browser HP
         double screenWidth = MediaQuery.of(context).size.width;
         int crossAxisCount;
         
         if (screenWidth < 600) {
-          crossAxisCount = 2; // HP: 2 Kolom (Biar Gede)
+          crossAxisCount = 2; 
         } else if (screenWidth < 900) {
-          crossAxisCount = 3; // Tablet: 3 Kolom
+          crossAxisCount = 3; 
         } else {
-          crossAxisCount = 5; // Desktop: 5 Kolom
+          crossAxisCount = 5; 
         }
 
         final int itemCount = isLoadingMore && !hasReachedMax
@@ -444,7 +443,6 @@ class _HomePageState extends State<HomePage> {
           padding: EdgeInsets.all(3.w),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
-            // Rasio 0.65 agar bentuknya persegi panjang (Poster)
             childAspectRatio: 0.65, 
             crossAxisSpacing: 3.w,
             mainAxisSpacing: 3.w,
@@ -463,7 +461,6 @@ class _HomePageState extends State<HomePage> {
             final manga = mangaList[index];
             return GestureDetector(
               onTap: () {
-                // Kirim ID langsung (Repository sudah handle logic angka)
                 context.push('/manga-detail/${manga['id']}');
               },
               child: MangaGridCard(
