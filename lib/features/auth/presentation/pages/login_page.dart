@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
+import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -12,17 +12,14 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  // Instance Firebase Auth
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // Controller untuk text field
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  // State untuk loading dan pesan error
   bool _isLoading = false;
   String? _errorMessage;
-  bool? _obscurePassword = true;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -31,7 +28,6 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  // --- FUNGSI UNTUK LOGIN ---
   Future<void> _login() async {
     setState(() {
       _isLoading = true;
@@ -39,18 +35,15 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      // Coba login dengan Firebase
       await _auth.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
 
-      // Jika berhasil, kembali ke halaman utama
       if (mounted) {
         context.go('/');
       }
     } on FirebaseAuthException catch (e) {
-      // Jika gagal, tampilkan pesan error
       setState(() {
         _errorMessage = e.message ?? "Error tidak diketahui";
       });
@@ -67,19 +60,19 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  // --- FUNGSI _register() SUDAH DIHAPUS DARI SINI ---
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final obscurePassword = _obscurePassword ?? true;
 
     return Scaffold(
       extendBody: true,
       backgroundColor: colorScheme.surface,
       body: Stack(
+        // --- PERBAIKAN 1: Paksa Stack memenuhi layar ---
+        fit: StackFit.expand, 
         children: [
+          // 1. Background Image
           Positioned.fill(
             child: ColorFiltered(
               colorFilter: ColorFilter.mode(
@@ -93,6 +86,8 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
           ),
+          
+          // 2. Gradient Overlay
           Positioned.fill(
             child: DecoratedBox(
               decoration: BoxDecoration(
@@ -107,21 +102,26 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
           ),
+
+          // 3. Content Form
           SafeArea(
             child: Stack(
               children: [
-                SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 32,
-                  ),
-                  child: Center(
+                // --- PERBAIKAN 2: Center agar form di tengah vertikal ---
+                Center( 
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 32,
+                    ),
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 520),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const SizedBox(height: 12),
+                          
+                          // LOGO
                           Hero(
                             tag: 'logo',
                             child: Container(
@@ -147,6 +147,7 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             ),
                           ),
+                          
                           const SizedBox(height: 18),
                           Text(
                             'Masuk ke MangaRead',
@@ -167,6 +168,8 @@ class _LoginPageState extends State<LoginPage> {
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 28),
+
+                          // FORM CONTAINER
                           ClipRRect(
                             borderRadius: BorderRadius.circular(24),
                             child: BackdropFilter(
@@ -189,9 +192,9 @@ class _LoginPageState extends State<LoginPage> {
                                 child: Padding(
                                   padding: const EdgeInsets.all(22),
                                   child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
                                     children: [
+                                      // INPUT EMAIL
                                       const Text(
                                         'Email',
                                         style: TextStyle(
@@ -211,15 +214,16 @@ class _LoginPageState extends State<LoginPage> {
                                             Icons.email_outlined,
                                           ),
                                           border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              14,
-                                            ),
+                                            borderRadius:
+                                                BorderRadius.circular(14),
                                           ),
                                         ),
-                                        keyboardType:
-                                            TextInputType.emailAddress,
+                                        keyboardType: TextInputType.emailAddress,
                                       ),
+                                      
                                       const SizedBox(height: 16),
+                                      
+                                      // INPUT PASSWORD
                                       const Text(
                                         'Password',
                                         style: TextStyle(
@@ -240,27 +244,28 @@ class _LoginPageState extends State<LoginPage> {
                                           ),
                                           suffixIcon: IconButton(
                                             icon: Icon(
-                                              obscurePassword
-                                                  ? Icons
-                                                        .visibility_off_outlined
+                                              _obscurePassword
+                                                  ? Icons.visibility_off_outlined
                                                   : Icons.visibility_outlined,
                                             ),
                                             onPressed: () {
                                               setState(() {
                                                 _obscurePassword =
-                                                    !obscurePassword;
+                                                    !_obscurePassword;
                                               });
                                             },
                                           ),
                                           border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              14,
-                                            ),
+                                            borderRadius:
+                                                BorderRadius.circular(14),
                                           ),
                                         ),
-                                        obscureText: obscurePassword,
+                                        obscureText: _obscurePassword,
                                       ),
+                                      
                                       const SizedBox(height: 18),
+                                      
+                                      // ERROR MESSAGE
                                       if (_errorMessage != null)
                                         Padding(
                                           padding: const EdgeInsets.symmetric(
@@ -268,9 +273,7 @@ class _LoginPageState extends State<LoginPage> {
                                           ),
                                           child: DecoratedBox(
                                             decoration: BoxDecoration(
-                                              color: Colors.red.withOpacity(
-                                                0.08,
-                                              ),
+                                              color: Colors.red.withOpacity(0.08),
                                               borderRadius:
                                                   BorderRadius.circular(12),
                                               border: Border.all(
@@ -279,9 +282,7 @@ class _LoginPageState extends State<LoginPage> {
                                               ),
                                             ),
                                             child: Padding(
-                                              padding: const EdgeInsets.all(
-                                                12.0,
-                                              ),
+                                              padding: const EdgeInsets.all(12.0),
                                               child: Row(
                                                 children: [
                                                   const Icon(
@@ -302,7 +303,10 @@ class _LoginPageState extends State<LoginPage> {
                                             ),
                                           ),
                                         ),
+                                        
                                       const SizedBox(height: 8),
+                                      
+                                      // TOMBOL LOGIN
                                       _isLoading
                                           ? const SizedBox(
                                               height: 52,
@@ -312,14 +316,13 @@ class _LoginPageState extends State<LoginPage> {
                                               ),
                                             )
                                           : ElevatedButton(
-                                              onPressed: _isLoading
-                                                  ? null
-                                                  : _login,
+                                              onPressed:
+                                                  _isLoading ? null : _login,
                                               style: ElevatedButton.styleFrom(
                                                 padding:
                                                     const EdgeInsets.symmetric(
-                                                      vertical: 16,
-                                                    ),
+                                                  vertical: 16,
+                                                ),
                                                 shape: RoundedRectangleBorder(
                                                   borderRadius:
                                                       BorderRadius.circular(14),
@@ -338,7 +341,10 @@ class _LoginPageState extends State<LoginPage> {
                                                 ),
                                               ),
                                             ),
+                                      
                                       const SizedBox(height: 14),
+                                      
+                                      // TOMBOL REGISTER
                                       OutlinedButton(
                                         onPressed: _isLoading
                                             ? null
@@ -354,9 +360,8 @@ class _LoginPageState extends State<LoginPage> {
                                                 .withOpacity(0.6),
                                           ),
                                           shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              14,
-                                            ),
+                                            borderRadius:
+                                                BorderRadius.circular(14),
                                           ),
                                           foregroundColor: colorScheme.primary,
                                         ),
@@ -378,6 +383,8 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                 ),
+                
+                // TOMBOL BACK
                 Positioned(
                   top: 10,
                   left: 12,

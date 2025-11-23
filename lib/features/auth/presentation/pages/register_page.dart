@@ -14,7 +14,6 @@ class RegisterPage extends StatefulWidget {
 class _RegisterPageState extends State<RegisterPage> {
   // Instance Firebase Auth
   final FirebaseAuth _auth = FirebaseAuth.instance;
-
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -35,7 +34,6 @@ class _RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
-  // --- INI FUNGSI BARU YANG TERHUBUNG KE FIREBASE ---
   Future<void> _registerWithFirebase() async {
     // 1. Validasi form
     if (!(_formKey.currentState?.validate() ?? false)) return;
@@ -47,25 +45,34 @@ class _RegisterPageState extends State<RegisterPage> {
     });
 
     try {
-      // 3. Panggil Firebase untuk membuat akun
+      // 3. Buat Akun
       await _auth.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
 
-      // (Opsional) Update nama profil pengguna
-      // Ini tidak wajib untuk login, tapi bagus untuk 'profile'
+      // Update nama profil
       if (_auth.currentUser != null) {
         await _auth.currentUser!.updateDisplayName(_nameController.text.trim());
       }
+      // 4. Logout setelah registrasi
+      await _auth.signOut();
 
-      // 4. Jika berhasil, kembali ke Halaman Utama
-      // Firebase otomatis login setelah register
       if (mounted) {
-        context.go('/'); // Langsung ke HomePage
+        // 5. Tampilkan Pesan Sukses
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Registrasi berhasil! Silakan login.'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+        context.go('/login'); 
       }
+      
+      // -------------------------------
+
     } on FirebaseAuthException catch (e) {
-      // 5. Jika Gagal, tampilkan pesan error
       setState(() {
         _errorMessage = e.message ?? "Gagal mendaftar.";
         _isProcessing = false;

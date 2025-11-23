@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 import 'package:manga_read/features/auth/presentation/pages/login_page.dart';
+import 'package:manga_read/features/auth/presentation/pages/register_page.dart';
 import 'package:manga_read/features/chapter_read/presentation/pages/chapter_read_page.dart';
 import 'package:manga_read/features/favorites/presentation/pages/favorite_page.dart';
 import 'package:manga_read/features/home/presentation/pages/home_page.dart';
@@ -43,6 +44,11 @@ class AppRouter {
       GoRoute(
         path: '/login',
         builder: (context, state) => const LoginPage(),
+      ),
+
+      GoRoute(
+        path: '/register',
+        builder: (context, state) => const RegisterPage(),
       ),
 
       // Favorite Page (SUDAH DIBERSIHKAN)
