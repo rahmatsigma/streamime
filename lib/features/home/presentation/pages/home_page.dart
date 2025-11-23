@@ -3,12 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:manga_read/features/home/data/repositories/i_manga_repository.dart';
+import 'package:manga_read/features/home/data/repositories/manga_repository_impl.dart';
 import 'package:manga_read/features/home/logic/manga_list_cubit.dart';
 import 'package:manga_read/features/home/logic/manga_list_state.dart';
 import 'package:manga_read/features/home/presentation/widgets/manga_grid_card.dart';
 import 'package:sizer/sizer.dart';
-
-// --- IMPORT FIREBASE AUTH ---
 import 'package:manga_read/features/auth/logic/auth_cubit.dart';
 import 'package:manga_read/features/auth/logic/auth_state.dart';
 
@@ -27,14 +26,14 @@ class _HomePageState extends State<HomePage> {
   Timer? _debounce;
   bool _isSearching = false;
 
-  // Data dummy (Nanti diganti logic backend)
+  // Data dummy (logic backend)
   final List<String> _favoriteManga = [
     'Solo Leveling',
     'Jujutsu Kaisen',
   ];
   final List<String> _readingHistory = [
     'Blue Lock - Ch. 224',
-    'Chainsaw Man - Ch. 146',
+    'One Piece - Ch. 1084',
   ];
 
   @override
@@ -204,20 +203,28 @@ class _HomePageState extends State<HomePage> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       onSelected: (action) => _handleProfileMenuSelection(action, isLoggedIn),
       itemBuilder: (context) {
-        final entries = <PopupMenuEntry<_ProfileMenuAction>>[
+        final authState = context.read<AuthCubit>().state;
+        final userId = authState.user?.uid;
+        final repo = context.read<IMangaRepository>() as MangaRepositoryImpl;
+
+        List<PopupMenuEntry<_ProfileMenuAction>> entries = [];        
+        entries.add(
           PopupMenuItem<_ProfileMenuAction>(
             value: _ProfileMenuAction.favorites,
             child: _buildMenuTile(
               icon: Icons.favorite_border,
               title: 'Favorite',
               subtitle: !isLoggedIn
-                  ? 'Login untuk menyimpan favorite.'
-                  : _favoriteManga.isEmpty
-                      ? 'Belum ada manga favorit.'
-                      : 'Terakhir: ${_favoriteManga.first}',
+                  ? 'Login untuk melihat favorit.'
+                  : 'Lihat koleksi favoritmu', // Teks Statis yang aman
             ),
           ),
-          const PopupMenuDivider(height: 12),
+        );
+
+        entries.add(const PopupMenuDivider(height: 12));
+
+        // 2. MENU HISTORY
+        entries.add(
           PopupMenuItem<_ProfileMenuAction>(
             value: _ProfileMenuAction.history,
             child: _buildMenuTile(
@@ -225,12 +232,15 @@ class _HomePageState extends State<HomePage> {
               title: 'History Baca',
               subtitle: !isLoggedIn
                   ? 'Login untuk melihat history.'
-                  : _readingHistory.isEmpty
-                      ? 'Belum ada history.'
-                      : 'Terakhir: ${_readingHistory.first}',
+                  : 'Lanjutkan bacaan terakhir', // Teks Statis yang aman
             ),
           ),
-          const PopupMenuDivider(height: 12),
+        );
+
+        entries.add(const PopupMenuDivider(height: 12));
+
+        // 3. SETTING
+        entries.add(
           PopupMenuItem<_ProfileMenuAction>(
             value: _ProfileMenuAction.settings,
             child: _buildMenuTile(
@@ -239,8 +249,9 @@ class _HomePageState extends State<HomePage> {
               subtitle: 'Atur preferensi aplikasi',
             ),
           ),
-        ];
+        );
 
+        // 4. LOGOUT (Kalau Login)
         if (isLoggedIn) {
           entries.addAll([
             const PopupMenuDivider(height: 12),
