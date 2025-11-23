@@ -8,12 +8,6 @@ import 'package:cloud_firestore/cloud_firestore.dart'; // Wajib ada buat Databas
 
 class MangaRepositoryImpl implements IMangaRepository {
   final Dio dio = DioClient().dio;
-
-  // ==========================================
-  // BAGIAN FIRESTORE (DATABASE)
-  // ==========================================
-
-  // 1. Cek apakah manga ini sudah di-love?
   Future<bool> isMangaFavorite(String uid, String mangaId) async {
     try {
       final doc = await FirebaseFirestore.instance
@@ -189,6 +183,44 @@ class MangaRepositoryImpl implements IMangaRepository {
     } catch (e) {
       return Left(ServerException('Error parsing: $e'));
     }
+  }
+
+  // 1. STREAM FAVORITE (Mendengarkan data favorite secara realtime)
+  Stream<List<Manga>> getFavoritesStream(String uid) {
+    return FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .collection('favorites')
+        .orderBy('addedAt', descending: true) // Urutkan dari yang baru ditambah
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        // Kita mapping manual dari Firestore ke Object Manga biar aman
+        return Manga(
+          id: data['id'],
+          title: data['title'],
+          imageUrl: data['coverUrl'] ?? '', // Nama field di firestore 'coverUrl'
+          genres: [], // Data minimalis
+          status: 'Unknown',
+          author: '',
+          type: data['type'],
+        );
+      }).toList();
+    });
+  }
+
+  // 2. STREAM HISTORY
+  Stream<List<Map<String, dynamic>>> getHistoryStream(String uid) {
+    return FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .collection('history')
+        .orderBy('lastReadAt', descending: true) // Yang terakhir dibaca paling atas
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) => doc.data()).toList();
+    });
   }
 
   // Helper
