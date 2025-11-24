@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:manga_read/features/home/data/repositories/i_manga_repository.dart';
-import 'package:manga_read/features/home/data/repositories/manga_repository_impl.dart'; // Import Impl buat casting
+import 'package:manga_read/features/home/data/repositories/manga_repository_impl.dart';
 import 'package:manga_read/features/home/logic/manga_list_cubit.dart';
 import 'package:manga_read/features/home/logic/manga_list_state.dart';
 import 'package:manga_read/features/home/presentation/widgets/manga_grid_card.dart';
-import 'package:sizer/sizer.dart';
 import 'package:manga_read/features/auth/logic/auth_cubit.dart';
 import 'package:manga_read/features/auth/logic/auth_state.dart';
+import 'package:sizer/sizer.dart';
 
 enum _ProfileMenuAction { favorites, history, settings, logout }
 
@@ -55,6 +55,115 @@ class _HomePageState extends State<HomePage> {
     _searchController.dispose();
     _debounce?.cancel();
     super.dispose();
+  }
+
+  // --- WIDGET: KARTU LANJUTKAN MEMBACA ---
+  Widget _buildContinueReading(String? userId) {
+    if (userId == null) return const SizedBox.shrink();
+
+    final repo = context.read<IMangaRepository>() as MangaRepositoryImpl;
+
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: repo.getHistoryStream(userId).map((list) => list.take(1).toList()),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        final history = snapshot.data!.first;
+        final String chapterId = history['chapterId'] ?? '';
+        
+        if (chapterId.isEmpty) return const SizedBox.shrink();
+
+        return Padding(
+          padding: EdgeInsets.fromLTRB(3.w, 2.w, 3.w, 2.w),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Lanjutkan Membaca",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 10),
+              InkWell(
+                onTap: () {
+                  // Langsung loncat ke Reader
+                  context.push('/read/$chapterId');
+                },
+                child: Container(
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.white10),
+                  ),
+                  child: Row(
+                    children: [
+                      // Gambar Kecil
+                      ClipRRect(
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(12),
+                          bottomLeft: Radius.circular(12),
+                        ),
+                        child: Image.network(
+                          history['coverUrl'], // Pastikan ini sudah diproxy di repo
+                          width: 80,
+                          height: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_,__,___) => Container(width: 80, color: Colors.grey),
+                        ),
+                      ),
+                      // Info Text
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                history['title'] ?? 'Manga',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold, 
+                                  fontSize: 16
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                history['lastChapter'] ?? 'Chapter ?',
+                                style: const TextStyle(
+                                  color: Colors.blueAccent,
+                                  fontSize: 13
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              const Text(
+                                "Ketuk untuk lanjut baca",
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 11
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      // Icon Play
+                      const Padding(
+                        padding: EdgeInsets.only(right: 16.0),
+                        child: Icon(Icons.play_circle_fill, size: 40, color: Colors.blueAccent),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Widget _buildSearchBar() {
@@ -110,11 +219,12 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final authState = context.watch<AuthCubit>().state;
     final bool isLoggedIn = authState.status == AuthStatus.authenticated;
+    final String? userId = authState.user?.uid;
     
-    // Ambil nama depan saja biar gak Kepanjangan di HP
+    // Ambil nama depan saja
     String displayName = authState.user?.displayName ?? 'User';
     if (displayName.contains(' ')) {
-      displayName = displayName.split(' ')[0]; // Ambil kata pertama
+      displayName = displayName.split(' ')[0]; 
     }
 
     final double screenWidth = MediaQuery.of(context).size.width;
@@ -125,7 +235,6 @@ class _HomePageState extends State<HomePage> {
         toolbarHeight: 96,
         centerTitle: false,
         titleSpacing: 16,
-        
         title: Padding(
           padding: const EdgeInsets.symmetric(vertical: 10),
           child: _isSearching
@@ -135,14 +244,12 @@ class _HomePageState extends State<HomePage> {
                     Text(
                       isMobile && isLoggedIn ? 'MangaRead' : 'MangaRead',
                       style: TextStyle(
-                        fontSize: isMobile ? 18 : 22, // Font lebih kecil di HP
+                        fontSize: isMobile ? 18 : 22, 
                         fontWeight: FontWeight.w600
                       ),
                     ),
-
                     if (isLoggedIn) ...[
                       const Spacer(), 
-                      
                       Container(
                         padding: EdgeInsets.symmetric(
                           horizontal: isMobile ? 8 : 16, 
@@ -155,12 +262,11 @@ class _HomePageState extends State<HomePage> {
                         ),
                         child: Row(
                           children: [
-                            // Sapaan: Di HP "Hai", di Desktop "Selamat datang"
                             Text(
                               isMobile ? 'Hai, ' : 'Selamat datang, ',
                               style: TextStyle(
                                 fontSize: isMobile ? 12 : 14,
-                                color: Colors.white,
+                                color: Colors.white54,
                               ),
                             ),
                             Text(
@@ -174,7 +280,6 @@ class _HomePageState extends State<HomePage> {
                           ],
                         ),
                       ),
-                      
                       const Spacer(), 
                     ] else ...[
                       const Spacer(), 
@@ -182,11 +287,9 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
         ),
-
         actions: [
           Padding(
-            padding:
-                const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
             child: DecoratedBox(
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.05),
@@ -202,38 +305,96 @@ class _HomePageState extends State<HomePage> {
           ),
           const SizedBox(width: 8),
           Padding(
-            padding:
-                const EdgeInsets.only(right: 16.0, top: 8, bottom: 8),
+            padding: const EdgeInsets.only(right: 16.0, top: 8, bottom: 8),
             child: _buildProfileMenu(isLoggedIn),
           ),
         ],
       ),
       
-      // ... (BAGIAN BODY KE BAWAH TIDAK BERUBAH) ...
       body: BlocBuilder<MangaListCubit, MangaListState>(
         builder: (context, state) {
+          // 1. Kalau Loading Awal (dan bukan load more)
           if (state is MangaListLoading) {
             return const Center(child: CircularProgressIndicator());
           }
+          
+          // 2. Kalau Error
           if (state is MangaListError) {
             return Center(child: Text('Error: ${state.message}'));
           }
+          
+          MangaList mangaList = [];
+          bool isLoadingMore = false;
+
           if (state is MangaListLoaded) {
-            if (state.mangaList.isEmpty) {
-              return const Center(
-                child: Text(
-                  'Tidak ada manga ditemukan.',
-                  style: TextStyle(fontSize: 18, color: Colors.grey),
-                ),
-              );
-            }
-            return _buildResponsiveGrid(
-              state.mangaList,
-              state.isLoadingMore,
-              state.hasReachedMax,
-            );
+            mangaList = state.mangaList;
+            isLoadingMore = state.isLoadingMore;
           }
-          return const Center(child: CircularProgressIndicator());
+
+          return RefreshIndicator(
+            onRefresh: () async {
+               if (_isSearching) {
+                  await context.read<MangaListCubit>().searchManga(_searchController.text);
+                } else {
+                  await context.read<MangaListCubit>().getPopularManga(page: 1);
+                }
+            },
+            child: CustomScrollView(
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                // Header Lanjutkan Membaca
+                if (!_isSearching)
+                  SliverToBoxAdapter(
+                    child: _buildContinueReading(userId),
+                  ),
+
+                // Grid Manga
+                if (mangaList.isEmpty) 
+                   const SliverToBoxAdapter(
+                     child: SizedBox(
+                       height: 200,
+                       child: Center(child: Text("Tidak ada data.")),
+                     ),
+                   )
+                else
+                  SliverPadding(
+                    padding: EdgeInsets.all(3.w),
+                    sliver: SliverGrid(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: screenWidth < 600 ? 2 : (screenWidth < 900 ? 3 : 5),
+                        childAspectRatio: 0.65,
+                        crossAxisSpacing: 3.w,
+                        mainAxisSpacing: 3.w,
+                      ),
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final manga = mangaList[index];
+                          return GestureDetector(
+                            onTap: () => context.push('/manga-detail/${manga['id']}'),
+                            child: MangaGridCard(
+                              key: ValueKey(manga['id']),
+                              title: manga['title'],
+                              coverUrl: manga['coverUrl'],
+                            ),
+                          );
+                        },
+                        childCount: mangaList.length,
+                      ),
+                    ),
+                  ),
+
+                // Loading Bawah
+                if (isLoadingMore)
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                  ),
+              ],
+            ),
+          );
         },
       ),
     );
@@ -249,7 +410,6 @@ class _HomePageState extends State<HomePage> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       onSelected: (action) => _handleProfileMenuSelection(action, isLoggedIn),
       itemBuilder: (context) {
-        // Logic untuk teks menu (statis)
         final List<PopupMenuEntry<_ProfileMenuAction>> entries = [];
 
         entries.add(
@@ -415,8 +575,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // --- PERBAIKAN UTAMA DI SINI ---
-  // Menghapus parameter 'extra' karena halaman Favorite & History sudah mandiri
   void _handleProfileMenuSelection(_ProfileMenuAction action, bool isLoggedIn) {
     if (action == _ProfileMenuAction.favorites ||
         action == _ProfileMenuAction.history) {
@@ -428,10 +586,10 @@ class _HomePageState extends State<HomePage> {
 
     switch (action) {
       case _ProfileMenuAction.favorites:
-        context.push('/favorites'); // Langsung push, tanpa data tambahan
+        context.push('/favorites');
         break;
       case _ProfileMenuAction.history:
-        context.push('/history'); // Langsung push, tanpa data tambahan
+        context.push('/history');
         break;
       case _ProfileMenuAction.settings:
         context.push('/settings');
@@ -443,82 +601,5 @@ class _HomePageState extends State<HomePage> {
         );
         break;
     }
-  }
-
-    // --- UPDATE: PULL TO REFRESH ---
-  Widget _buildResponsiveGrid(
-    MangaList mangaList,
-    bool isLoadingMore,
-    bool hasReachedMax,
-  ) {
-
-    return RefreshIndicator(
-      color: Colors.blueAccent, 
-      backgroundColor: Colors.white,
-      onRefresh: () async {
-        // 2. Logika Refresh
-        if (_isSearching) {
-          await context.read<MangaListCubit>().searchManga(_searchController.text);
-        } else {
-
-          await context.read<MangaListCubit>().getPopularManga(page: 1);
-        }
-      },
-      child: Sizer(
-        builder: (context, orientation, deviceType) {
-          double screenWidth = MediaQuery.of(context).size.width;
-          int crossAxisCount;
-          
-          if (screenWidth < 600) {
-            crossAxisCount = 2; 
-          } else if (screenWidth < 900) {
-            crossAxisCount = 3; 
-          } else {
-            crossAxisCount = 5; 
-          }
-  
-          final int itemCount = isLoadingMore && !hasReachedMax
-              ? mangaList.length + 1
-              : mangaList.length;
-  
-          return GridView.builder(
-            controller: _scrollController,
-            // 3. PENTING: AlwaysScrollableScrollPhysics
-            // Agar bisa ditarik (pull) meskipun itemnya sedikit/tidak memenuhi layar
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: EdgeInsets.all(3.w),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: crossAxisCount,
-              childAspectRatio: 0.65, 
-              crossAxisSpacing: 3.w,
-              mainAxisSpacing: 3.w,
-            ),
-            itemCount: itemCount,
-            itemBuilder: (context, index) {
-              if (index >= mangaList.length) {
-                return const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: CircularProgressIndicator(),
-                  ),
-                );
-              }
-  
-              final manga = mangaList[index];
-              return GestureDetector(
-                onTap: () {
-                  context.push('/manga-detail/${manga['id']}');
-                },
-                child: MangaGridCard(
-                  key: ValueKey(manga['id']),
-                  title: manga['title'],
-                  coverUrl: manga['coverUrl'],
-                ),
-              );
-            },
-          );
-        },
-      ),
-    );
   }
 }

@@ -64,8 +64,17 @@ class ReadingHistoryPage extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: () {
-          // Langsung buka detail manga
-          context.push('/manga-detail/${data['mangaId']}');
+          // --- LOGIC NAVIGASI ---
+          final String? chapterId = data['chapterId'];
+          final String mangaId = data['mangaId'];
+
+          if (chapterId != null && chapterId.isNotEmpty) {
+            print("Lanjut baca chapter: $chapterId");
+            context.push('/read/$chapterId');
+          } else {
+            print("Data lama/tidak lengkap, buka detail manga: $mangaId");
+            context.push('/manga-detail/$mangaId');
+          }
         },
         child: Row(
           children: [
@@ -96,18 +105,34 @@ class ReadingHistoryPage extends StatelessWidget {
                     children: [
                       const Icon(Icons.menu_book, size: 14, color: Colors.blue),
                       const SizedBox(width: 4),
-                      Text(
-                        "Terakhir: ${data['lastChapter']}",
-                        style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.w500),
+                      Expanded(
+                        child: Text(
+                          "Terakhir: ${data['lastChapter'] ?? '-'}",
+                          style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.w500),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ],
                   ),
                 ],
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Icon(Icons.play_circle_outline, size: 28, color: Colors.blue),
+            // Tombol Play di Kanan (Shortcut)
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: IconButton(
+                icon: const Icon(Icons.play_circle_fill, size: 32, color: Colors.blue),
+                onPressed: () {
+                   // Logic sama persis dengan onTap
+                   final String? chapterId = data['chapterId'];
+                   if (chapterId != null && chapterId.isNotEmpty) {
+                     context.push('/read/$chapterId');
+                   } else {
+                     context.push('/manga-detail/${data['mangaId']}');
+                   }
+                },
+              ),
             ),
           ],
         ),

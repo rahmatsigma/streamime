@@ -300,7 +300,8 @@ class MangaDetailPage extends StatelessWidget {
                   onTap: () {
                     context.read<MangaDetailCubit>().saveHistoryIfLoggedIn(
                       userId,
-                      chapter['title']
+                      chapter['title'],
+                      chapter['id'],
                     );
 
                     print("Navigasi ke chapter ID: ${chapter['id']}");

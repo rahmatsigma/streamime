@@ -32,12 +32,13 @@ class MangaDetailCubit extends Cubit<MangaDetailState> {
   }
 
   // 2. Simpan History (Fitur yang tadi kita bahas)
-  Future<void> saveHistoryIfLoggedIn(String? userId, String chapterTitle) async {
+  Future<void> saveHistoryIfLoggedIn(String? userId, String chapterTitle, String chapterId) async {
     if (state is MangaDetailLoaded && userId != null) {
       final currentManga = (state as MangaDetailLoaded).manga;
       
       if (_repository is MangaRepositoryImpl) {
-        await (_repository as MangaRepositoryImpl).addToHistory(userId, currentManga, chapterTitle);
+        // Kirim chapterId ke repository
+        await (_repository as MangaRepositoryImpl).addToHistory(userId, currentManga, chapterTitle, chapterId);
       }
     }
   }

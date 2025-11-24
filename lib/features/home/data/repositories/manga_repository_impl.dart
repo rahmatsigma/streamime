@@ -47,7 +47,7 @@ class MangaRepositoryImpl implements IMangaRepository {
   }
 
   // 3. Simpan History Baca
-  Future<void> addToHistory(String uid, Manga manga, String chapterTitle) async {
+  Future<void> addToHistory(String uid, Manga manga, String chapterTitle, String chapterId) async {
     try {
       await FirebaseFirestore.instance
           .collection('users')
@@ -59,6 +59,7 @@ class MangaRepositoryImpl implements IMangaRepository {
         'title': manga.title,
         'coverUrl': manga.imageUrl,
         'lastChapter': chapterTitle,
+        'chapterId': chapterId,
         'lastReadAt': FieldValue.serverTimestamp(),
       });
     } catch (e) {
