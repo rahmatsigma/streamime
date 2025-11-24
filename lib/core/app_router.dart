@@ -31,12 +31,16 @@ class AppRouter {
         },
       ),
 
-      // Reader (Baca Komik)
+      // Reader 
       GoRoute(
         path: '/read/:chapterId',
         builder: (context, state) {
           final chapterId = state.pathParameters['chapterId']!;
-          return ChapterReadPage(chapterId: chapterId);
+          final chapters = state.extra as List<Map<String, dynamic>>?; 
+          return ChapterReadPage(
+            chapterId: chapterId, 
+            chapters: chapters ?? [], 
+          );
         },
       ),
 

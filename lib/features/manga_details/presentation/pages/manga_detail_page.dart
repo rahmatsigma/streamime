@@ -298,12 +298,17 @@ class MangaDetailPage extends StatelessWidget {
                     : null,
                   trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.white54),
                   onTap: () {
-                    // --- LOGIKA BARU: SIMPAN HISTORY JIKA LOGIN ---
+                    // 1. Simpan History
                     context.read<MangaDetailCubit>().saveHistoryIfLoggedIn(
-                      userId, 
+                      userId,
                       chapter['title']
                     );
 
+                    // 2. Navigasi ke Reader + BAWA DAFTAR CHAPTER (manga.chapterList)
+                    context.push(
+                      '/read/${chapter['id']}', 
+                      extra: manga.chapterList, // <--- INI KUNCINYA
+                    );
                     // Pindah ke halaman baca
                     print("Membaca chapter ID: ${chapter['id']}");
                     context.push('/read/${chapter['id']}');

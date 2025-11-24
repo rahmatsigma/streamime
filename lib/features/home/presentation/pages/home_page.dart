@@ -160,14 +160,14 @@ class _HomePageState extends State<HomePage> {
                               isMobile ? 'Hai, ' : 'Selamat datang, ',
                               style: TextStyle(
                                 fontSize: isMobile ? 12 : 14,
-                                color: Colors.white54,
+                                color: Colors.white,
                               ),
                             ),
                             Text(
                               '$displayName 👋',
                               style: TextStyle(
                                 fontSize: isMobile ? 13 : 16, 
-                                color: Colors.white54,
+                                color: Colors.white,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
