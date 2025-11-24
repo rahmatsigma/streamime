@@ -445,62 +445,80 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+    // --- UPDATE: PULL TO REFRESH ---
   Widget _buildResponsiveGrid(
     MangaList mangaList,
     bool isLoadingMore,
     bool hasReachedMax,
   ) {
-    return Sizer(
-      builder: (context, orientation, deviceType) {
-        double screenWidth = MediaQuery.of(context).size.width;
-        int crossAxisCount;
-        
-        if (screenWidth < 600) {
-          crossAxisCount = 2; 
-        } else if (screenWidth < 900) {
-          crossAxisCount = 3; 
+
+    return RefreshIndicator(
+      color: Colors.blueAccent, 
+      backgroundColor: Colors.white,
+      onRefresh: () async {
+        // 2. Logika Refresh
+        if (_isSearching) {
+          await context.read<MangaListCubit>().searchManga(_searchController.text);
         } else {
-          crossAxisCount = 5; 
+
+          await context.read<MangaListCubit>().getPopularManga(page: 1);
         }
-
-        final int itemCount = isLoadingMore && !hasReachedMax
-            ? mangaList.length + 1
-            : mangaList.length;
-
-        return GridView.builder(
-          controller: _scrollController,
-          padding: EdgeInsets.all(3.w),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            childAspectRatio: 0.65, 
-            crossAxisSpacing: 3.w,
-            mainAxisSpacing: 3.w,
-          ),
-          itemCount: itemCount,
-          itemBuilder: (context, index) {
-            if (index >= mangaList.length) {
-              return const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: CircularProgressIndicator(),
+      },
+      child: Sizer(
+        builder: (context, orientation, deviceType) {
+          double screenWidth = MediaQuery.of(context).size.width;
+          int crossAxisCount;
+          
+          if (screenWidth < 600) {
+            crossAxisCount = 2; 
+          } else if (screenWidth < 900) {
+            crossAxisCount = 3; 
+          } else {
+            crossAxisCount = 5; 
+          }
+  
+          final int itemCount = isLoadingMore && !hasReachedMax
+              ? mangaList.length + 1
+              : mangaList.length;
+  
+          return GridView.builder(
+            controller: _scrollController,
+            // 3. PENTING: AlwaysScrollableScrollPhysics
+            // Agar bisa ditarik (pull) meskipun itemnya sedikit/tidak memenuhi layar
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: EdgeInsets.all(3.w),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
+              childAspectRatio: 0.65, 
+              crossAxisSpacing: 3.w,
+              mainAxisSpacing: 3.w,
+            ),
+            itemCount: itemCount,
+            itemBuilder: (context, index) {
+              if (index >= mangaList.length) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+              }
+  
+              final manga = mangaList[index];
+              return GestureDetector(
+                onTap: () {
+                  context.push('/manga-detail/${manga['id']}');
+                },
+                child: MangaGridCard(
+                  key: ValueKey(manga['id']),
+                  title: manga['title'],
+                  coverUrl: manga['coverUrl'],
                 ),
               );
-            }
-
-            final manga = mangaList[index];
-            return GestureDetector(
-              onTap: () {
-                context.push('/manga-detail/${manga['id']}');
-              },
-              child: MangaGridCard(
-                key: ValueKey(manga['id']),
-                title: manga['title'],
-                coverUrl: manga['coverUrl'],
-              ),
-            );
-          },
-        );
-      },
+            },
+          );
+        },
+      ),
     );
   }
 }

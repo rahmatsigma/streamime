@@ -4,17 +4,21 @@ import 'package:manga_read/features/home/logic/manga_list_state.dart';
 
 class MangaListCubit extends Cubit<MangaListState> {
   final IMangaRepository _repository;
-
-  // Variabel internal untuk melacak state pagination
   int _currentPage = 1;
-  bool _isFetching = false; // Mencegah panggilan ganda
+  bool _isFetching = false;
 
   MangaListCubit(this._repository) : super(MangaListInitial()) {
-    fetchPopularManga(); // Panggil data halaman pertama
+    fetchPopularManga(); 
   }
 
-  // Fungsi ini untuk panggil Halaman 1 (Fresh Load)
-  void fetchPopularManga() async {
+  Future<void> getPopularManga({required int page}) async {
+    if (page == 1) {
+      await fetchPopularManga();
+    }
+  }
+
+  // --- 2. FETCH DATA (Diubah jadi Future) ---
+  Future<void> fetchPopularManga() async {
     emit(MangaListLoading());
     _currentPage = 1;
     _isFetching = true;
@@ -31,8 +35,8 @@ class MangaListCubit extends Cubit<MangaListState> {
     _isFetching = false;
   }
 
-  // Fungsi BARU untuk mengambil data selanjutnya
-  void loadMoreManga() async {
+  // Fungsi untuk mengambil data selanjutnya (Infinite Scroll)
+  Future<void> loadMoreManga() async {
     // Jangan lakukan apapun jika sedang fetching atau data sudah habis
     if (_isFetching || (state is MangaListLoaded && (state as MangaListLoaded).hasReachedMax)) {
       return;
@@ -42,26 +46,21 @@ class MangaListCubit extends Cubit<MangaListState> {
     if (state is MangaListLoaded) {
       final currentState = state as MangaListLoaded;
       _isFetching = true;
-
-      // 1. Tampilkan loading spinner di bawah list
       emit(currentState.copyWith(isLoadingMore: true));
 
-      _currentPage++; // Naikkan nomor halaman
+      _currentPage++; 
       final result = await _repository.getPopularManga(page: _currentPage);
 
       result.fold(
         (failure) {
-          // Jika gagal, kembali ke state sebelumnya
           emit(currentState.copyWith(
             isLoadingMore: false,
-            // (Opsional) bisa tambahkan pesan error
           ));
         },
         (newMangaList) {
-          // 2. Gabungkan list lama + list baru
           emit(currentState.copyWith(
             mangaList: currentState.mangaList + newMangaList,
-            hasReachedMax: newMangaList.isEmpty, // Jika data baru kosong = habis
+            hasReachedMax: newMangaList.isEmpty, 
             isLoadingMore: false,
           ));
         },
@@ -70,16 +69,17 @@ class MangaListCubit extends Cubit<MangaListState> {
     }
   }
 
-  void searchManga(String query) async {
+  // Fungsi Pencarian (Diubah jadi Future)
+  Future<void> searchManga(String query) async {
     // Jika query kosong, panggil ulang daftar 'populer'
     if (query.isEmpty) {
-      fetchPopularManga();
+      await fetchPopularManga();
       return;
     }
 
     // Tampilkan loading screen penuh
     emit(MangaListLoading());
-    _isFetching = true; // Mencegah infinite scroll
+    _isFetching = true; // Mencegah infinite scroll saat mode cari
 
     final result = await _repository.searchManga(query: query);
 
@@ -89,7 +89,7 @@ class MangaListCubit extends Cubit<MangaListState> {
         // Tampilkan hasil search
         emit(MangaListLoaded(
           mangaList: mangaList,
-          hasReachedMax: true, // PENTING: Matikan infinite scroll untuk hasil search
+          hasReachedMax: true, // Matikan infinite scroll untuk hasil search
           isLoadingMore: false,
         ));
       },
