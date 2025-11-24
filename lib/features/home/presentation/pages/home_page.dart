@@ -110,52 +110,79 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final authState = context.watch<AuthCubit>().state;
     final bool isLoggedIn = authState.status == AuthStatus.authenticated;
-    final String userName = authState.user?.displayName ?? 'User';
+    
+    // Ambil nama depan saja biar gak Kepanjangan di HP
+    String displayName = authState.user?.displayName ?? 'User';
+    if (displayName.contains(' ')) {
+      displayName = displayName.split(' ')[0]; // Ambil kata pertama
+    }
 
     final double screenWidth = MediaQuery.of(context).size.width;
-    final bool isDesktopOrTablet = screenWidth > 600;
+    final bool isMobile = screenWidth < 600;
 
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 96,
         centerTitle: false,
         titleSpacing: 16,
+        
         title: Padding(
           padding: const EdgeInsets.symmetric(vertical: 10),
           child: _isSearching
               ? _buildSearchBar()
               : Row(
                   children: [
-                    const Text(
-                      'MangaRead',
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+                    Text(
+                      isMobile && isLoggedIn ? 'MangaRead' : 'MangaRead',
+                      style: TextStyle(
+                        fontSize: isMobile ? 18 : 22, // Font lebih kecil di HP
+                        fontWeight: FontWeight.w600
+                      ),
                     ),
-                    if (isLoggedIn && isDesktopOrTablet) ...[
-                      const Spacer(),
+
+                    if (isLoggedIn) ...[
+                      const Spacer(), 
+                      
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isMobile ? 8 : 16, 
+                          vertical: 6
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.05),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(color: Colors.white10),
                         ),
-                        child: Text(
-                          'Selamat datang, $userName 👋',
-                          style: const TextStyle(
-                            fontSize: 16, 
-                            color: Colors.white70,
-                            fontWeight: FontWeight.w500,
-                          ),
+                        child: Row(
+                          children: [
+                            // Sapaan: Di HP "Hai", di Desktop "Selamat datang"
+                            Text(
+                              isMobile ? 'Hai, ' : 'Selamat datang, ',
+                              style: TextStyle(
+                                fontSize: isMobile ? 12 : 14,
+                                color: Colors.white54,
+                              ),
+                            ),
+                            Text(
+                              '$displayName 👋',
+                              style: TextStyle(
+                                fontSize: isMobile ? 13 : 16, 
+                                color: Colors.white54,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const Spacer(),
-                    ] else if (!isDesktopOrTablet) ...[
+                      
+                      const Spacer(), 
                     ] else ...[
                       const Spacer(), 
                     ]
                   ],
                 ),
         ),
+
         actions: [
           Padding(
             padding:
@@ -181,6 +208,8 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
+      
+      // ... (BAGIAN BODY KE BAWAH TIDAK BERUBAH) ...
       body: BlocBuilder<MangaListCubit, MangaListState>(
         builder: (context, state) {
           if (state is MangaListLoading) {
