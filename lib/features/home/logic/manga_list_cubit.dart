@@ -69,27 +69,40 @@ class MangaListCubit extends Cubit<MangaListState> {
     }
   }
 
-  // Fungsi Pencarian (Diubah jadi Future)
-  Future<void> searchManga(String query) async {
-    // Jika query kosong, panggil ulang daftar 'populer'
+  // Fungsi Pencarian 
+  Future<void> searchManga(String query, {String? filterType, String? filterStatus}) async {
     if (query.isEmpty) {
       await fetchPopularManga();
       return;
     }
 
-    // Tampilkan loading screen penuh
     emit(MangaListLoading());
-    _isFetching = true; // Mencegah infinite scroll saat mode cari
+    _isFetching = true;
 
     final result = await _repository.searchManga(query: query);
 
     result.fold(
       (failure) => emit(MangaListError(failure.message)),
       (mangaList) {
-        // Tampilkan hasil search
+        var filteredList = mangaList;
+
+        if (filterType != null && filterType != 'All') {
+          filteredList = filteredList.where((manga) {
+            final type = manga['type']?.toString().toLowerCase() ?? '';
+            return type == filterType.toLowerCase();
+          }).toList();
+        }
+
+        if (filterStatus != null && filterStatus != 'All') {
+          filteredList = filteredList.where((manga) {
+            final status = manga['status']?.toString().toLowerCase() ?? '';
+            return status.contains(filterStatus.toLowerCase());
+          }).toList();
+        }
+
         emit(MangaListLoaded(
-          mangaList: mangaList,
-          hasReachedMax: true, // Matikan infinite scroll untuk hasil search
+          mangaList: filteredList,
+          hasReachedMax: true,
           isLoadingMore: false,
         ));
       },
