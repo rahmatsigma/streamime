@@ -121,6 +121,8 @@ class MangaRepositoryImpl implements IMangaRepository {
           'id': mangaObj.id,
           'title': mangaObj.title,
           'coverUrl': mangaObj.imageUrl, 
+          'type': mangaObj.type,     
+          'status': mangaObj.status,
         };
       }).toList();
       

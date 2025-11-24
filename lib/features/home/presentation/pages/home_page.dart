@@ -7,7 +7,6 @@ import 'package:manga_read/features/home/data/repositories/manga_repository_impl
 import 'package:manga_read/features/home/logic/manga_list_cubit.dart';
 import 'package:manga_read/features/home/logic/manga_list_state.dart';
 import 'package:manga_read/features/home/presentation/widgets/manga_grid_card.dart';
-import 'package:manga_read/features/home/presentation/widgets/filter_bottom_sheet.dart';
 import 'package:manga_read/features/auth/logic/auth_cubit.dart';
 import 'package:manga_read/features/auth/logic/auth_state.dart';
 import 'package:sizer/sizer.dart';
@@ -27,9 +26,6 @@ class _HomePageState extends State<HomePage> {
   Timer? _debounce;
   bool _isSearching = false;
 
-  String _filterType = 'All';
-  String _filterStatus = 'All';
-
   @override
   void initState() {
     super.initState();
@@ -48,11 +44,7 @@ class _HomePageState extends State<HomePage> {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 750), () {
       final query = _searchController.text;
-      context.read<MangaListCubit>().searchManga(
-        query, 
-        filterType: _filterType,
-        filterStatus: _filterStatus
-      );
+      context.read<MangaListCubit>().searchManga(query);
     });
   }
 
@@ -67,93 +59,42 @@ class _HomePageState extends State<HomePage> {
 
   // --- WIDGET SEARCH BAR ---
   Widget _buildSearchBar() {
-    return Row(
-      children: [
-        Expanded(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 50),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(32),
-                border: Border.all(color: Colors.white24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.25),
-                    blurRadius: 12,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.search, color: Colors.white70, size: 22),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: TextField(
-                      controller: _searchController,
-                      autofocus: true,
-                      decoration: const InputDecoration(
-                        hintText: 'Cari manga...',
-                        border: InputBorder.none,
-                        hintStyle: TextStyle(color: Colors.white60),
-                        isDense: true,
-                      ),
-                      style: const TextStyle(color: Colors.white, fontSize: 18),
-                    ),
-                  ),
-                ],
-              ),
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 50),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(32),
+          border: Border.all(color: Colors.white24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.25),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
             ),
-          ),
+          ],
         ),
-        const SizedBox(width: 8),
-        GestureDetector(
-          onTap: () {
-            showModalBottomSheet(
-              context: context,
-              backgroundColor: Colors.transparent,
-              builder: (context) => FilterBottomSheet(
-                currentType: _filterType,
-                currentStatus: _filterStatus,
-                onApply: (type, status) {
-                  setState(() {
-                    _filterType = type;
-                    _filterStatus = status;
-                  });
-                  if (_searchController.text.isNotEmpty) {
-                    context.read<MangaListCubit>().searchManga(
-                      _searchController.text, 
-                      filterType: type,
-                      filterStatus: status
-                    );
-                  }
-                },
-              ),
-            );
-          },
-          child: Container(
-            height: 50,
-            width: 50,
-            decoration: BoxDecoration(
-              color: (_filterType != 'All' || _filterStatus != 'All') 
-                  ? Colors.blueAccent 
-                  : Colors.white.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(32),
-              border: Border.all(color: Colors.white24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.25),
-                  blurRadius: 12,
-                  offset: const Offset(0, 6),
+        child: Row(
+          children: [
+            const Icon(Icons.search, color: Colors.white70, size: 22),
+            const SizedBox(width: 10),
+            Expanded(
+              child: TextField(
+                controller: _searchController,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  hintText: 'Cari manga...',
+                  border: InputBorder.none,
+                  hintStyle: TextStyle(color: Colors.white60),
+                  isDense: true,
                 ),
-              ],
+                style: const TextStyle(color: Colors.white, fontSize: 18),
+              ),
             ),
-            child: const Icon(Icons.filter_list, color: Colors.white),
-          ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
@@ -164,10 +105,6 @@ class _HomePageState extends State<HomePage> {
 
     if (!_isSearching) {
       _searchController.clear();
-      setState(() {
-        _filterType = 'All';
-        _filterStatus = 'All';
-      });
       context.read<MangaListCubit>().getPopularManga(page: 1);
     }
   }
@@ -219,7 +156,7 @@ class _HomePageState extends State<HomePage> {
                           bottomLeft: Radius.circular(12),
                         ),
                         child: Image.network(
-                          history['coverUrl'],
+                          history['coverUrl'], 
                           width: 80,
                           height: double.infinity,
                           fit: BoxFit.cover,
@@ -381,96 +318,97 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       
-      // --- PERBAIKAN UTAMA DI SINI (SAFETY CHECK) ---
+      // --- PERBAIKAN UTAMA DI SINI ---
       body: BlocBuilder<MangaListCubit, MangaListState>(
         builder: (context, state) {
-          // 1. Handle Loading (Tanpa Data)
+          // 1. LOADING: Langsung return loading tanpa cek mangaList
           if (state is MangaListLoading) {
             return const Center(child: CircularProgressIndicator());
           }
           
-          // 2. Handle Error
+          // 2. ERROR: Langsung return error tanpa cek mangaList
           if (state is MangaListError) {
             return Center(child: Text('Error: ${state.message}'));
           }
           
-          // 3. Handle Loaded
+          // 3. LOADED: Baru di sini kita ambil datanya
+          // Kita siapkan variabel default
+          List<dynamic> mangaList = [];
+          bool isLoadingMore = false;
+
+          // Kita cek apakah state-nya benar-benar Loaded
           if (state is MangaListLoaded) {
-            final mangaList = state.mangaList;
-            final bool isLoadingMore = state.isLoadingMore;
-
-            return RefreshIndicator(
-              onRefresh: () async {
-                 if (_isSearching) {
-                    await context.read<MangaListCubit>().searchManga(
-                      _searchController.text,
-                      filterType: _filterType,
-                      filterStatus: _filterStatus
-                    );
-                  } else {
-                    await context.read<MangaListCubit>().getPopularManga(page: 1);
-                  }
-              },
-              child: CustomScrollView(
-                controller: _scrollController,
-                physics: const AlwaysScrollableScrollPhysics(),
-                slivers: [
-                  // Header Lanjutkan Membaca
-                  if (!_isSearching)
-                    SliverToBoxAdapter(
-                      child: _buildContinueReading(userId),
-                    ),
-
-                  // Grid Manga
-                  if (mangaList.isEmpty) 
-                     const SliverToBoxAdapter(
-                       child: SizedBox(
-                         height: 200,
-                         child: Center(child: Text("Tidak ada data ditemukan.")),
-                       ),
-                     )
-                  else
-                    SliverPadding(
-                      padding: EdgeInsets.all(3.w),
-                      sliver: SliverGrid(
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: screenWidth < 600 ? 2 : (screenWidth < 900 ? 3 : 5),
-                          childAspectRatio: 0.65,
-                          crossAxisSpacing: 3.w,
-                          mainAxisSpacing: 3.w,
-                        ),
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            final manga = mangaList[index];
-                            return GestureDetector(
-                              onTap: () => context.push('/manga-detail/${manga['id']}'),
-                              child: MangaGridCard(
-                                key: ValueKey(manga['id']),
-                                title: manga['title'],
-                                coverUrl: manga['coverUrl'],
-                              ),
-                            );
-                          },
-                          childCount: mangaList.length,
-                        ),
-                      ),
-                    ),
-
-                  // Loading Bawah
-                  if (isLoadingMore)
-                    const SliverToBoxAdapter(
-                      child: Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: Center(child: CircularProgressIndicator()),
-                      ),
-                    ),
-                ],
-              ),
-            );
+            mangaList = state.mangaList;
+            isLoadingMore = state.isLoadingMore;
+          } else {
+            // Jika state Initial atau lainnya, biarkan list kosong
+            mangaList = [];
           }
 
-          // Fallback jika state tidak dikenal
-          return const Center(child: CircularProgressIndicator());
+          return RefreshIndicator(
+            onRefresh: () async {
+               if (_isSearching) {
+                  await context.read<MangaListCubit>().searchManga(_searchController.text);
+                } else {
+                  await context.read<MangaListCubit>().getPopularManga(page: 1);
+                }
+            },
+            child: CustomScrollView(
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                // Header Lanjutkan Membaca
+                if (!_isSearching)
+                  SliverToBoxAdapter(
+                    child: _buildContinueReading(userId),
+                  ),
+
+                // Pesan jika kosong
+                if (mangaList.isEmpty) 
+                   const SliverToBoxAdapter(
+                     child: SizedBox(
+                       height: 200,
+                       child: Center(child: Text("Tidak ada data ditemukan.")),
+                     ),
+                   )
+                else
+                  SliverPadding(
+                    padding: EdgeInsets.all(3.w),
+                    sliver: SliverGrid(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: screenWidth < 600 ? 2 : (screenWidth < 900 ? 3 : 5),
+                        childAspectRatio: 0.65,
+                        crossAxisSpacing: 3.w,
+                        mainAxisSpacing: 3.w,
+                      ),
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final manga = mangaList[index];
+                          return GestureDetector(
+                            onTap: () => context.push('/manga-detail/${manga['id']}'),
+                            child: MangaGridCard(
+                              key: ValueKey(manga['id']),
+                              title: manga['title'],
+                              coverUrl: manga['coverUrl'],
+                            ),
+                          );
+                        },
+                        childCount: mangaList.length,
+                      ),
+                    ),
+                  ),
+
+                // Loading Bawah (Pagination)
+                if (isLoadingMore)
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                  ),
+              ],
+            ),
+          );
         },
       ),
     );
