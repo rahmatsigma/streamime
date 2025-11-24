@@ -36,10 +36,16 @@ class AppRouter {
         path: '/read/:chapterId',
         builder: (context, state) {
           final chapterId = state.pathParameters['chapterId']!;
-          final chapters = state.extra as List<Map<String, dynamic>>?; 
+          List<Map<String, dynamic>> chapterList = [];
+          if (state.extra != null && state.extra is List) {
+            chapterList = (state.extra as List)
+                .map((e) => Map<String, dynamic>.from(e as Map))
+                .toList();
+          }
+          
           return ChapterReadPage(
             chapterId: chapterId, 
-            chapters: chapters ?? [], 
+            chapters: chapterList, 
           );
         },
       ),
