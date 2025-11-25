@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:manga_read/features/auth/logic/auth_cubit.dart'; // Import Auth
-import 'package:manga_read/features/auth/logic/auth_state.dart'; // Import Auth State
+import 'package:manga_read/features/auth/logic/auth_cubit.dart';
+import 'package:manga_read/features/auth/logic/auth_state.dart';
 import 'package:manga_read/features/home/data/repositories/i_manga_repository.dart';
 import 'package:manga_read/features/manga_details/logic/manga_detail_cubit.dart';
 import 'package:manga_read/features/manga_details/logic/manga_detail_state.dart';
@@ -14,7 +14,6 @@ class MangaDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 1. AMBIL STATUS LOGIN (USER ID)
     final authState = context.read<AuthCubit>().state;
     final String? userId = (authState.status == AuthStatus.authenticated) 
         ? authState.user?.uid 
@@ -32,40 +31,32 @@ class MangaDetailPage extends StatelessWidget {
             onPressed: () => context.pop(),
           ),
           actions: [
-            // BlocBuilder ini mendengarkan perubahan state (misal: loading -> loaded)
-            // dan perubahan status favorite (true/false)
             BlocBuilder<MangaDetailCubit, MangaDetailState>(
               builder: (context, state) {
                 bool isFav = false;
-                // Cek apakah data sudah loaded dan apakah statusnya favorite
                 if (state is MangaDetailLoaded) {
                   isFav = state.isFavorite;
                 }
 
                 return IconButton(
-                  // Kalau fav: Icon Hati Penuh (Merah)
-                  // Kalau bukan: Icon Hati Garis (Putih)
                   icon: Icon(
                     isFav ? Icons.favorite : Icons.favorite_border,
                     color: isFav ? Colors.redAccent : null, 
                   ),
                   onPressed: () {
-                    // 1. Cek Status Login
                     final authState = context.read<AuthCubit>().state;
                     final isLoggedIn = authState.status == AuthStatus.authenticated;
 
                     if (isLoggedIn && authState.user != null) {
-                      // 2. Kalau Login: Eksekusi Simpan/Hapus Favorite
                       context.read<MangaDetailCubit>().toggleFavorite(authState.user!.uid);
                     } else {
-                      // 3. Kalau Belum Login: Munculkan Dialog
                       _showLoginRequiredDialog(context);
                     }
                   },
                 );
               },
             ),
-            const SizedBox(width: 16), // Jarak sedikit dari kanan
+            const SizedBox(width: 16),
           ],
         ),
         body: BlocBuilder<MangaDetailCubit, MangaDetailState>(
@@ -98,7 +89,6 @@ class MangaDetailPage extends StatelessWidget {
               return LayoutBuilder(
                 builder: (context, constraints) {
                   bool isDesktop = constraints.maxWidth > 700;
-                  // Kita kirim userId ke layout agar bisa dipakai saat klik chapter
                   if (isDesktop) {
                     return _buildDesktopLayout(context, manga, userId);
                   } else {
@@ -115,37 +105,40 @@ class MangaDetailPage extends StatelessWidget {
     );
   }
 
-  // --- MOBILE LAYOUT ---
   Widget _buildMobileLayout(BuildContext context, Manga manga, String? userId) {
+    final ScrollController scrollController = ScrollController();
+    
     return SingleChildScrollView(
+      controller: scrollController,
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Center(child: _buildCoverImage(manga.imageUrl)),
           const SizedBox(height: 24),
-          _buildInfoSection(context, manga, userId),
+          _buildInfoSection(context, manga, userId, scrollController),
         ],
       ),
     );
   }
 
-  // --- DESKTOP LAYOUT ---
   Widget _buildDesktopLayout(BuildContext context, Manga manga, String? userId) {
+    final ScrollController scrollController = ScrollController();
+    
     return SingleChildScrollView(
+      controller: scrollController,
       padding: const EdgeInsets.symmetric(horizontal: 48.0, vertical: 24.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildCoverImage(manga.imageUrl),
           const SizedBox(width: 32),
-          Expanded(child: _buildInfoSection(context, manga, userId)),
+          Expanded(child: _buildInfoSection(context, manga, userId, scrollController)),
         ],
       ),
     );
   }
 
-  // --- WIDGET COVER ---
   Widget _buildCoverImage(String coverUrl) {
     return Card(
       elevation: 8,
@@ -175,14 +168,12 @@ class MangaDetailPage extends StatelessWidget {
     );
   }
 
-  // --- WIDGET INFO ---
-  Widget _buildInfoSection(BuildContext context, Manga manga, String? userId) {
+  Widget _buildInfoSection(BuildContext context, Manga manga, String? userId, ScrollController scrollController) {
     final textTheme = Theme.of(context).textTheme;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Judul
         Text(
           manga.title,
           style: textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -197,7 +188,6 @@ class MangaDetailPage extends StatelessWidget {
         
         const SizedBox(height: 16),
 
-        // Status & Type Badges
         Row(
           children: [
             if (manga.status != null) _buildBadge(context, manga.status!, Colors.green),
@@ -210,7 +200,6 @@ class MangaDetailPage extends StatelessWidget {
 
         const SizedBox(height: 24),
 
-        // Genres
         Text('Genres', style: textTheme.titleLarge),
         const SizedBox(height: 8),
         Wrap(
@@ -225,7 +214,6 @@ class MangaDetailPage extends StatelessWidget {
 
         const SizedBox(height: 24),
 
-        // Sinopsis
         Text('Sinopsis', style: textTheme.titleLarge),
         const SizedBox(height: 8),
         if (manga.synopsis != null && manga.synopsis!.isNotEmpty)
@@ -256,14 +244,35 @@ class MangaDetailPage extends StatelessWidget {
             ),
           ),
 
-        const SizedBox(height: 24),
+      const SizedBox(height: 24),
         const Divider(thickness: 1, color: Colors.white24),
         const SizedBox(height: 16),
         
-        // List Chapter
-        Text(
-          'Daftar Chapter (${manga.chapterList.length})', 
-          style: textTheme.titleLarge
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Daftar Chapter (${manga.chapterList.length})', 
+              style: textTheme.titleLarge
+            ),
+            if (manga.chapterList.isNotEmpty)
+              OutlinedButton.icon(
+                onPressed: () {
+                  // Scroll ke posisi maksimum (paling bawah)
+                  scrollController.animateTo(
+                    scrollController.position.maxScrollExtent,
+                    duration: const Duration(milliseconds: 800),
+                    curve: Curves.easeInOut,
+                  );
+                },
+                icon: const Icon(Icons.arrow_drop_down_rounded, size: 20),
+                label: const Text('Ke Chapter 1'),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  side: const BorderSide(color: Colors.white54),
+                ),
+              ),
+          ],
         ),
         const SizedBox(height: 12),
 
@@ -350,7 +359,7 @@ class MangaDetailPage extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(dialogContext);
-              context.push('/login'); // Pastikan rute '/login' sudah ada di app_router
+              context.push('/login');
             },
             child: const Text("Login Sekarang"),
           ),
