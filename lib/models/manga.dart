@@ -2,9 +2,9 @@ import 'package:manga_read/models/comic.dart';
 import 'package:manga_read/core/image_proxy.dart';
 
 class Manga extends Comic {
-  final String readingDirection;
-  final String origin;
-  final List<Map<String, dynamic>> chapterList; 
+  String _readingDirection;
+  String _origin;
+  List<Map<String, dynamic>> _chapterList;
 
   Manga({
     required super.id,
@@ -17,17 +17,34 @@ class Manga extends Comic {
     super.chapters,
     super.author,
     super.type,
-    this.readingDirection = 'Right to Left',
-    this.origin = 'Japan 🇯🇵',
-    this.chapterList = const [],
-  });
+    String readingDirection = 'Right to Left',
+    String origin = 'Japan',
+    List<Map<String, dynamic>> chapterList = const [],
+  })  : _readingDirection = readingDirection,
+        _origin = origin,
+        _chapterList = List<Map<String, dynamic>>.from(chapterList);
+
+  String get readingDirection => _readingDirection;
+  set readingDirection(String value) {
+    if (value.isNotEmpty) _readingDirection = value;
+  }
+
+  String get origin => _origin;
+  set origin(String value) {
+    if (value.isNotEmpty) _origin = value;
+  }
+
+  List<Map<String, dynamic>> get chapterList => List.unmodifiable(_chapterList);
+  set chapterList(List<Map<String, dynamic>> value) {
+    _chapterList = List<Map<String, dynamic>>.from(value);
+  }
 
   @override
   Map<String, dynamic> getAdditionalInfo() {
     return {
       ...super.getAdditionalInfo(),
-      'Origin': origin,
-      'Reading Direction': readingDirection,
+      'Origin': _origin,
+      'Reading Direction': _readingDirection,
     };
   }
 
@@ -47,7 +64,7 @@ class Manga extends Comic {
       }
     }
     if (finalImageUrl.isEmpty) {
-        finalImageUrl = 'https://via.placeholder.com/300x400.png?text=No+Image';
+      finalImageUrl = 'https://via.placeholder.com/300x400.png?text=No+Image';
     }
 
     // 3. SINOPSIS
@@ -56,12 +73,12 @@ class Manga extends Comic {
       rawDesc = null;
     }
     final synopsis = rawDesc;
-    
+
     // --- 4. GENRES (LOGIC PINTAR) ---
     List<String> genres = [];
     // Cek berbagai kemungkinan nama key
     final rawGenres = json['genres'] ?? json['genre'] ?? json['genres_list'];
-    
+
     if (rawGenres != null) {
       if (rawGenres is List) {
         // Jika formatnya List: ["Action", "Magic"] atau [{"name": "Action"}]
@@ -87,7 +104,7 @@ class Manga extends Comic {
     if (json['chapters'] is List) {
       parsedChapters = (json['chapters'] as List).map((ch) {
         return {
-          'id': ch['id']?.toString() ?? '', 
+          'id': ch['id']?.toString() ?? '',
           'title': ch['name'] ?? ch['title'] ?? ch['chapter_number'] ?? 'Chapter ?',
           'date': ch['created_at'] ?? '',
         };
