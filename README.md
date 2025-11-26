@@ -66,7 +66,7 @@ mangaread/
 | No | Nama | NIM |
 |----|------|-----|
 | 1  |  Riski Rahmattillah Pratama    |   24111814079  |      
-| 2  |      |     |      
+| 2  |  Rendy Syahputra Riyadi    |  24111814026   |      
 | 3  |  Renza Alvianino    |   24111814011  |      
 | 4  |   Vhemas Dwi Agung Prasetyo   |  24111814047  |      
 | 5  |  Helena Kusuma Wardhani    |  24111814020   |      
