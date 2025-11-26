@@ -35,21 +35,11 @@ git clone https://github.com/rahmatsigma/mangaread.git
 cd mangaread
 ```
 
-3. Install dependencies
-```bash
-npm install
-# atau
-yarn install
-```
+3. Jalankan aplikasi
 
-4. Jalankan aplikasi
-```bash
-npm start
-# atau
-yarn start
-```
+flutter run
 
-5. Buka browser dan akses `http://localhost:3000`
+4. Buka browser dan akses `http://localhost:3000`
 
 ## 📁 Struktur Project
 
