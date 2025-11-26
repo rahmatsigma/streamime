@@ -81,7 +81,7 @@ mangaread/
 | 4  |      |     |      
 | 5  |      |     |      
 | 6  |      |     |      
-| 7  |      |     |      
+| 7  |  Mirza Azmina    |   24111814058  |      
 
 ## 📧 Kontak
 
