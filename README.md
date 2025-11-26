@@ -80,7 +80,7 @@ mangaread/
 | 3  |      |     |      
 | 4  |      |     |      
 | 5  |      |     |      
-| 6  |      |     |      
+| 6  |  Eni Noviasari    |  24111814040   |      
 | 7  |  Mirza Azmina    |   24111814058  |      
 
 ## 📧 Kontak
