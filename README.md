@@ -77,7 +77,7 @@ mangaread/
 |----|------|-----|
 | 1  |  Riski Rahmattillah Pratama    |   24111814079  |      
 | 2  |      |     |      
-| 3  |      |     |      
+| 3  |  Renza Alvianino    |   24111814011  |      
 | 4  |      |     |      
 | 5  |      |     |      
 | 6  |  Eni Noviasari    |  24111814040   |      
