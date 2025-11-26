@@ -69,7 +69,7 @@ mangaread/
 | 2  |      |     |      
 | 3  |  Renza Alvianino    |   24111814011  |      
 | 4  |      |     |      
-| 5  |      |     |      
+| 5  |  Helena Kusuma Wardhani    |  24111814020   |      
 | 6  |  Eni Noviasari    |  24111814040   |      
 | 7  |  Mirza Azmina    |   24111814058  |      
 
