@@ -36,9 +36,9 @@ cd mangaread
 ```
 
 3. Jalankan aplikasi
-
+```bash
 flutter run
-
+```
 4. Buka browser dan akses `http://localhost:3000`
 
 ## 📁 Struktur Project
