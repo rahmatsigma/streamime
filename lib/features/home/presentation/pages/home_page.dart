@@ -318,30 +318,30 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       
-      // --- PERBAIKAN UTAMA DI SINI ---
+      // --- PERBAIKAN LOGIKA STATE ---
       body: BlocBuilder<MangaListCubit, MangaListState>(
         builder: (context, state) {
-          // 1. LOADING: Langsung return loading tanpa cek mangaList
+          // 1. LOADING: Kalau lagi loading dan kita TIDAK sedang punya data
+          //    (biasanya loading awal), tampilkan spinner.
           if (state is MangaListLoading) {
             return const Center(child: CircularProgressIndicator());
           }
           
-          // 2. ERROR: Langsung return error tanpa cek mangaList
+          // 2. ERROR: Kalau error, tampilkan pesan
           if (state is MangaListError) {
             return Center(child: Text('Error: ${state.message}'));
           }
           
-          // 3. LOADED: Baru di sini kita ambil datanya
-          // Kita siapkan variabel default
+          // 3. LOADED: Ini satu-satunya state yang punya data 'mangaList'
+          //    Kita deklarasikan variabel di sini biar aman
           List<dynamic> mangaList = [];
           bool isLoadingMore = false;
 
-          // Kita cek apakah state-nya benar-benar Loaded
           if (state is MangaListLoaded) {
             mangaList = state.mangaList;
             isLoadingMore = state.isLoadingMore;
           } else {
-            // Jika state Initial atau lainnya, biarkan list kosong
+            // Fallback kalau state aneh (Initial, dll), list kosong
             mangaList = [];
           }
 
@@ -363,7 +363,7 @@ class _HomePageState extends State<HomePage> {
                     child: _buildContinueReading(userId),
                   ),
 
-                // Pesan jika kosong
+                // Grid Manga
                 if (mangaList.isEmpty) 
                    const SliverToBoxAdapter(
                      child: SizedBox(
@@ -563,6 +563,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // --- Dialog Login ---
   void _showLoginDialog() {
     showDialog(
       context: context,
@@ -589,6 +590,37 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // --- Dialog Logout ---
+  void _showLogoutDialog() {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text("Konfirmasi Keluar"),
+        content: const Text("Apakah kamu yakin ingin keluar dari akun ini?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text("Batal"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              context.read<AuthCubit>().signOut();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Berhasil logout.')),
+              );
+            },
+            child: const Text("Keluar"),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _handleProfileMenuSelection(_ProfileMenuAction action, bool isLoggedIn) {
     if (action == _ProfileMenuAction.favorites ||
         action == _ProfileMenuAction.history) {
@@ -609,10 +641,8 @@ class _HomePageState extends State<HomePage> {
         context.push('/settings');
         break;
       case _ProfileMenuAction.logout:
-        context.read<AuthCubit>().signOut();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Berhasil logout.')),
-        );
+        // Pakai dialog logout yang baru
+        _showLogoutDialog();
         break;
     }
   }
