@@ -124,7 +124,8 @@ class _HomePageState extends State<HomePage> {
 
         final history = snapshot.data!.first;
         final String chapterId = history['chapterId'] ?? '';
-        
+        final String mangaId = history['mangaId'] ?? ''; 
+
         if (chapterId.isEmpty) return const SizedBox.shrink();
 
         return Padding(
@@ -137,9 +138,45 @@ class _HomePageState extends State<HomePage> {
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
+              
               InkWell(
-                onTap: () {
-                  context.push('/read/$chapterId');
+                onTap: () async {
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (c) => const Center(child: CircularProgressIndicator()),
+                  );
+
+                  try {
+                    // 2. Ambil Detail Manga dari API 
+                    final result = await repo.getMangaDetail(id: mangaId);
+                    if (context.mounted) Navigator.pop(context);
+
+                    // 4. Cek Hasil
+                    result.fold(
+                      (failure) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text("Gagal memuat navigasi, membuka mode baca biasa."))
+                          );
+                          context.push('/read/$chapterId'); 
+                        }
+                      },
+                      (manga) {
+                        if (context.mounted) {
+                          context.push(
+                            '/read/$chapterId', 
+                            extra: manga.chapterList,
+                          );
+                        }
+                      },
+                    );
+                  } catch (e) {
+                    if (context.mounted) {
+                      Navigator.pop(context); 
+                      context.push('/read/$chapterId');
+                    }
+                  }
                 },
                 child: Container(
                   height: 100,
@@ -150,6 +187,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   child: Row(
                     children: [
+                      // Gambar Kecil
                       ClipRRect(
                         borderRadius: const BorderRadius.only(
                           topLeft: Radius.circular(12),
@@ -163,6 +201,7 @@ class _HomePageState extends State<HomePage> {
                           errorBuilder: (_,__,___) => Container(width: 80, color: Colors.grey),
                         ),
                       ),
+                      // Info Text
                       Expanded(
                         child: Padding(
                           padding: const EdgeInsets.all(12.0),
@@ -172,24 +211,34 @@ class _HomePageState extends State<HomePage> {
                             children: [
                               Text(
                                 history['title'] ?? 'Manga',
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold, 
+                                  fontSize: 16
+                                ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 history['lastChapter'] ?? 'Chapter ?',
-                                style: const TextStyle(color: Colors.blueAccent, fontSize: 13),
+                                style: const TextStyle(
+                                  color: Colors.blueAccent,
+                                  fontSize: 13
+                                ),
                               ),
                               const SizedBox(height: 4),
                               const Text(
                                 "Ketuk untuk lanjut baca",
-                                style: TextStyle(color: Colors.grey, fontSize: 11),
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 11
+                                ),
                               ),
                             ],
                           ),
                         ),
                       ),
+                      // Icon Play
                       const Padding(
                         padding: EdgeInsets.only(right: 16.0),
                         child: Icon(Icons.play_circle_fill, size: 40, color: Colors.blueAccent),
