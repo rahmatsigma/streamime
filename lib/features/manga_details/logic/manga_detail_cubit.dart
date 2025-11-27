@@ -1,6 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:manga_read/features/home/data/repositories/i_manga_repository.dart';
-// PENTING: Import Impl biar bisa akses fungsi khusus Firestore
 import 'package:manga_read/features/home/data/repositories/manga_repository_impl.dart'; 
 import 'manga_detail_state.dart';
 

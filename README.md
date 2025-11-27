@@ -1,16 +1,89 @@
-# manga_read
+# MangaRead
 
-A new Flutter project.
+manga application untuk membaca manga secara online dengan antarmuka yang modern dan user-friendly.
 
-## Getting Started
+## 📖 Deskripsi Project
 
-This project is a starting point for a Flutter application.
+MangaRead adalah aplikasi yang memungkinkan pengguna untuk membaca manga favorit mereka secara online. Aplikasi ini dibangun dengan teknologi web modern dan menyediakan pengalaman membaca yang nyaman dengan berbagai fitur pendukung.
 
-A few resources to get you started if this is your first Flutter project:
+## ✨ Fitur Utama
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- 📚 Katalog manga yang lengkap
+- 🔍 Pencarian manga berdasarkan judul
+- 📖 Reader interface yang responsif
+- 💾 Bookmark dan history pembacaan
+- 🌓 Mode gelap/terang
+- 📱 Responsive design untuk mobile dan desktop
+- ⚡ Loading yang cepat dan smooth
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 🛠️ Teknologi yang Digunakan
+
+- **Frontend**: Dart
+- **Backend**: Firebase Core, Firebase Auth, Cloud Firestore
+- **Database**: Firebase
+- **API**: Komiku
+
+## 🚀 Cara Instalasi
+
+1. Clone repository ini
+```bash
+git clone https://github.com/rahmatsigma/mangaread.git
+```
+
+2. Masuk ke direktori project
+```bash
+cd mangaread
+```
+
+3. Jalankan aplikasi
+```bash
+flutter run
+```
+4. Buka browser dan akses `http://localhost:3000`
+
+## 📁 Struktur Project
+
+```
+mangaread/
+├── lib/
+│   ├── core/
+│   ├── features/
+│   ├── models/
+├── package.json
+└── README.md
+```
+
+## 💻 Cara Penggunaan
+
+1. Buka aplikasi di browser / download
+2. Browse katalog manga yang tersedia
+3. Pilih manga yang ingin dibaca
+4. Klik chapter untuk mulai membaca
+5. Gunakan navigasi untuk berpindah antar halaman
+
+## 🤝 Tim Pengembang
+
+| No | Nama | NIM |
+|----|------|-----|
+| 1  |  Riski Rahmattillah Pratama    |   24111814079  |      
+| 2  |  Rendy Syahputra Riyadi    |  24111814026   |      
+| 3  |  Renza Alvianino    |   24111814011  |      
+| 4  |   Vhemas Dwi Agung Prasetyo   |  24111814047  |      
+| 5  |  Helena Kusuma Wardhani    |  24111814020   |      
+| 6  |  Eni Noviasari    |  24111814040   |      
+| 7  |  Mirza Azmina    |   24111814058  |      
+
+## 📧 Kontak
+
+Untuk pertanyaan atau saran, silakan hubungi:
+- Email: rahmattillah079@gmail.com
+- GitHub: [@rahmatsigma](https://github.com/rahmatsigma)
+
+## 🙏 Acknowledgments
+
+- Terima kasih kepada semua kontributor
+- Terima kasih kepada Komiku untuk API
+
+---
+
+⭐ Jangan lupa untuk memberikan star jika project ini membantu Anda!

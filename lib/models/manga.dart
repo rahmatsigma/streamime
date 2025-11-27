@@ -107,6 +107,7 @@ class Manga extends Comic {
           'id': ch['id']?.toString() ?? '',
           'title': ch['name'] ?? ch['title'] ?? ch['chapter_number'] ?? 'Chapter ?',
           'date': ch['created_at'] ?? '',
+          'mangaId': id,
         };
       }).toList();
     }

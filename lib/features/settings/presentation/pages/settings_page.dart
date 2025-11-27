@@ -1,9 +1,9 @@
-import 'dart:convert'; 
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:firebase_auth/firebase_auth.dart'; 
-import 'package:cloud_firestore/cloud_firestore.dart'; 
-import 'package:image_picker/image_picker.dart'; 
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
 import 'package:manga_read/features/auth/logic/auth_cubit.dart';
 import 'package:manga_read/features/theme/logic/theme_cubit.dart';
@@ -44,10 +44,8 @@ class _SettingsPageState extends State<SettingsPage> {
     super.dispose();
   }
 
-  // --- FUNGSI UPDATE FOTO (VERSI WEB FRIENDLY) ---
   Future<void> _pickAndSaveImageToFirestore() async {
     try {
-      // 1. Pilih Gambar
       final XFile? image = await _picker.pickImage(
         source: ImageSource.gallery, 
         imageQuality: 20, 
@@ -58,12 +56,9 @@ class _SettingsPageState extends State<SettingsPage> {
 
       setState(() => _isUploadingImage = true);
 
-      // 2. Konversi Gambar ke Base64 (CARA BARU - AMAN DI WEB)
-      // Kita baca bytes langsung dari XFile, jangan bikin File() baru
       final bytes = await image.readAsBytes(); 
       final String base64Image = base64Encode(bytes);
 
-      // 3. Simpan ke Firestore (users/{uid})
       final String uid = _currentUser!.uid;
       await FirebaseFirestore.instance.collection('users').doc(uid).set({
         'avatarBase64': base64Image, 
@@ -77,7 +72,6 @@ class _SettingsPageState extends State<SettingsPage> {
       }
 
     } catch (e) {
-      print("Error: $e");
       setState(() => _isUploadingImage = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -86,7 +80,6 @@ class _SettingsPageState extends State<SettingsPage> {
       }
     }
   }
-  // ------------------------------------------------
 
   Future<void> _saveProfile() async {
     if (_currentUser == null) return;
@@ -114,6 +107,36 @@ class _SettingsPageState extends State<SettingsPage> {
       }
     }
   }
+
+  // --- FUNGSI BARU: DIALOG LOGOUT ---
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Konfirmasi Keluar"),
+        content: const Text("Apakah kamu yakin ingin keluar dari akun ini?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context), // Tutup dialog
+            child: const Text("Batal"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              Navigator.pop(context); // Tutup dialog dulu
+              context.read<AuthCubit>().signOut(); // Logout
+              context.go('/login'); // Pindah halaman
+            },
+            child: const Text("Keluar"),
+          ),
+        ],
+      ),
+    );
+  }
+  // ----------------------------------
 
   void _showChangePasswordDialog(BuildContext context) {
     final newPassController = TextEditingController();
@@ -379,8 +402,8 @@ class _SettingsPageState extends State<SettingsPage> {
             width: double.infinity,
             child: OutlinedButton.icon(
               onPressed: () {
-                context.read<AuthCubit>().signOut();
-                context.go('/login');
+                // Panggil Dialog Logout
+                _showLogoutDialog(context);
               },
               icon: const Icon(Icons.logout, color: Colors.red),
               label: const Text("Keluar Akun", style: TextStyle(color: Colors.red)),
