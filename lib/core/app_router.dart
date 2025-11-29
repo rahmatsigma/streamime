@@ -8,6 +8,7 @@ import 'package:manga_read/features/history/presentation/pages/reading_history_p
 import 'package:manga_read/features/manga_details/presentation/pages/manga_detail_page.dart';
 import 'package:manga_read/features/settings/presentation/pages/settings_page.dart';
 import 'package:manga_read/features/splash/presentation/pages/splash_screen.dart';
+import 'package:manga_read/features/settings/presentation/pages/about_us_page.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -61,20 +62,18 @@ class AppRouter {
         builder: (context, state) => const RegisterPage(),
       ),
 
-      // Favorite Page (SUDAH DIBERSIHKAN)
+      // Favorite Page 
       GoRoute(
         path: '/favorites',
         builder: (context, state) {
-          // Tidak perlu kirim parameter isLoggedIn / list lagi
           return const FavoritePage(); 
         },
       ),
 
-      // History Page (SUDAH DIBERSIHKAN)
+      // History Page 
       GoRoute(
         path: '/history',
         builder: (context, state) {
-          // Tidak perlu kirim parameter lagi
           return const ReadingHistoryPage();
         },
       ),
@@ -83,6 +82,11 @@ class AppRouter {
       GoRoute(
         path: '/settings',
         builder: (context, state) => const SettingsPage(),
+      ),
+
+      GoRoute(
+        path: '/about',
+        builder: (context, state) => const AboutUsPage(),
       ),
     ],
   );

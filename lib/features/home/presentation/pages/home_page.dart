@@ -11,7 +11,8 @@ import 'package:manga_read/features/auth/logic/auth_cubit.dart';
 import 'package:manga_read/features/auth/logic/auth_state.dart';
 import 'package:sizer/sizer.dart';
 
-enum _ProfileMenuAction { favorites, history, settings, logout }
+// Pastikan 'about' ada di sini
+enum _ProfileMenuAction { favorites, history, settings, about, logout }
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -124,8 +125,7 @@ class _HomePageState extends State<HomePage> {
 
         final history = snapshot.data!.first;
         final String chapterId = history['chapterId'] ?? '';
-        final String mangaId = history['mangaId'] ?? ''; 
-
+        
         if (chapterId.isEmpty) return const SizedBox.shrink();
 
         return Padding(
@@ -138,45 +138,9 @@ class _HomePageState extends State<HomePage> {
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
-              
               InkWell(
-                onTap: () async {
-                  showDialog(
-                    context: context,
-                    barrierDismissible: false,
-                    builder: (c) => const Center(child: CircularProgressIndicator()),
-                  );
-
-                  try {
-                    // 2. Ambil Detail Manga dari API 
-                    final result = await repo.getMangaDetail(id: mangaId);
-                    if (context.mounted) Navigator.pop(context);
-
-                    // 4. Cek Hasil
-                    result.fold(
-                      (failure) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("Gagal memuat navigasi, membuka mode baca biasa."))
-                          );
-                          context.push('/read/$chapterId'); 
-                        }
-                      },
-                      (manga) {
-                        if (context.mounted) {
-                          context.push(
-                            '/read/$chapterId', 
-                            extra: manga.chapterList,
-                          );
-                        }
-                      },
-                    );
-                  } catch (e) {
-                    if (context.mounted) {
-                      Navigator.pop(context); 
-                      context.push('/read/$chapterId');
-                    }
-                  }
+                onTap: () {
+                  context.push('/read/$chapterId');
                 },
                 child: Container(
                   height: 100,
@@ -187,7 +151,6 @@ class _HomePageState extends State<HomePage> {
                   ),
                   child: Row(
                     children: [
-                      // Gambar Kecil
                       ClipRRect(
                         borderRadius: const BorderRadius.only(
                           topLeft: Radius.circular(12),
@@ -201,7 +164,6 @@ class _HomePageState extends State<HomePage> {
                           errorBuilder: (_,__,___) => Container(width: 80, color: Colors.grey),
                         ),
                       ),
-                      // Info Text
                       Expanded(
                         child: Padding(
                           padding: const EdgeInsets.all(12.0),
@@ -211,34 +173,24 @@ class _HomePageState extends State<HomePage> {
                             children: [
                               Text(
                                 history['title'] ?? 'Manga',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold, 
-                                  fontSize: 16
-                                ),
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 history['lastChapter'] ?? 'Chapter ?',
-                                style: const TextStyle(
-                                  color: Colors.blueAccent,
-                                  fontSize: 13
-                                ),
+                                style: const TextStyle(color: Colors.blueAccent, fontSize: 13),
                               ),
                               const SizedBox(height: 4),
                               const Text(
                                 "Ketuk untuk lanjut baca",
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 11
-                                ),
+                                style: TextStyle(color: Colors.grey, fontSize: 11),
                               ),
                             ],
                           ),
                         ),
                       ),
-                      // Icon Play
                       const Padding(
                         padding: EdgeInsets.only(right: 16.0),
                         child: Icon(Icons.play_circle_fill, size: 40, color: Colors.blueAccent),
@@ -367,31 +319,21 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       
-      // --- PERBAIKAN LOGIKA STATE ---
       body: BlocBuilder<MangaListCubit, MangaListState>(
         builder: (context, state) {
-          // 1. LOADING: Kalau lagi loading dan kita TIDAK sedang punya data
-          //    (biasanya loading awal), tampilkan spinner.
           if (state is MangaListLoading) {
             return const Center(child: CircularProgressIndicator());
           }
-          
-          // 2. ERROR: Kalau error, tampilkan pesan
           if (state is MangaListError) {
             return Center(child: Text('Error: ${state.message}'));
           }
           
-          // 3. LOADED: Ini satu-satunya state yang punya data 'mangaList'
-          //    Kita deklarasikan variabel di sini biar aman
           List<dynamic> mangaList = [];
           bool isLoadingMore = false;
 
           if (state is MangaListLoaded) {
             mangaList = state.mangaList;
             isLoadingMore = state.isLoadingMore;
-          } else {
-            // Fallback kalau state aneh (Initial, dll), list kosong
-            mangaList = [];
           }
 
           return RefreshIndicator(
@@ -406,13 +348,11 @@ class _HomePageState extends State<HomePage> {
               controller: _scrollController,
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
-                // Header Lanjutkan Membaca
                 if (!_isSearching)
                   SliverToBoxAdapter(
                     child: _buildContinueReading(userId),
                   ),
 
-                // Grid Manga
                 if (mangaList.isEmpty) 
                    const SliverToBoxAdapter(
                      child: SizedBox(
@@ -447,7 +387,6 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
 
-                // Loading Bawah (Pagination)
                 if (isLoadingMore)
                   const SliverToBoxAdapter(
                     child: Padding(
@@ -475,6 +414,7 @@ class _HomePageState extends State<HomePage> {
       itemBuilder: (context) {
         final List<PopupMenuEntry<_ProfileMenuAction>> entries = [];
 
+        // 1. FAVORITE (Tetap minta login)
         entries.add(
           PopupMenuItem<_ProfileMenuAction>(
             value: _ProfileMenuAction.favorites,
@@ -490,6 +430,7 @@ class _HomePageState extends State<HomePage> {
 
         entries.add(const PopupMenuDivider(height: 12));
 
+        // 2. HISTORY (Tetap minta login)
         entries.add(
           PopupMenuItem<_ProfileMenuAction>(
             value: _ProfileMenuAction.history,
@@ -505,6 +446,7 @@ class _HomePageState extends State<HomePage> {
 
         entries.add(const PopupMenuDivider(height: 12));
 
+        // 3. SETTING (Public)
         entries.add(
           PopupMenuItem<_ProfileMenuAction>(
             value: _ProfileMenuAction.settings,
@@ -516,6 +458,22 @@ class _HomePageState extends State<HomePage> {
           ),
         );
 
+        entries.add(const PopupMenuDivider(height: 12));
+
+        // 4. TENTANG KAMI (PUBLIC - BISA DIAKSES SIAPA SAJA)
+        // Karena ditaruh di luar blok 'if (isLoggedIn)', dia akan muncul selalu
+        entries.add(
+          PopupMenuItem<_ProfileMenuAction>(
+            value: _ProfileMenuAction.about,
+            child: _buildMenuTile(
+              icon: Icons.info_outline,
+              title: 'Tentang Kami',
+              subtitle: 'Info aplikasi & tim',
+            ),
+          ),
+        );
+
+        // 5. LOGOUT (Hanya kalau login)
         if (isLoggedIn) {
           entries.addAll([
             const PopupMenuDivider(height: 12),
@@ -612,7 +570,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // --- Dialog Login ---
   void _showLoginDialog() {
     showDialog(
       context: context,
@@ -639,7 +596,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // --- Dialog Logout ---
   void _showLogoutDialog() {
     showDialog(
       context: context,
@@ -671,6 +627,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _handleProfileMenuSelection(_ProfileMenuAction action, bool isLoggedIn) {
+    // VALIDASI LOGIN HANYA UNTUK FAVORITES & HISTORY
+    // About & Settings & Logout boleh diklik tanpa validasi login dialog
     if (action == _ProfileMenuAction.favorites ||
         action == _ProfileMenuAction.history) {
       if (!isLoggedIn) {
@@ -689,8 +647,10 @@ class _HomePageState extends State<HomePage> {
       case _ProfileMenuAction.settings:
         context.push('/settings');
         break;
+      case _ProfileMenuAction.about: // <-- TENTANG KAMI BISA DIAKSES BEBAS
+        context.push('/about');
+        break;
       case _ProfileMenuAction.logout:
-        // Pakai dialog logout yang baru
         _showLogoutDialog();
         break;
     }
