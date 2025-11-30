@@ -26,11 +26,11 @@ class AboutUsPage extends StatelessWidget {
       "gh": "https://github.com",
     },
     {
-      "name": "Anggota Tiga",
-      "role": "Backend Engineer",
-      "image": "assets/images/anggota3.jpg",
-      "ig": "https://instagram.com",
-      "gh": "https://github.com",
+      "name": "Renza Alvianino",
+      "role": "Support",
+      "image": "assets/images/renza.jpg",
+      "ig": "https://www.instagram.com/renza_alvianino",
+      "gh": "https://github.com/renza22",
     },
     {
       "name": "Vhemas Dwi A P",
@@ -47,7 +47,7 @@ class AboutUsPage extends StatelessWidget {
       "gh": "https://github.com",
     },
     {
-      "name": "Anggota Enam",
+      "name": "Eni Noviasari",
       "role": "Quality Assurance",
       "image": "assets/images/enii.jpg",
       "ig": "https://www.instagram.com/nainoni__?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==",
