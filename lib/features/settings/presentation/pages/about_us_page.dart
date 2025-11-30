@@ -54,11 +54,11 @@ class AboutUsPage extends StatelessWidget {
       "gh": "https://github.com/neviori",
     },
     {
-      "name": "Anggota Tujuh",
+      "name": "Mirza Azmina",
       "role": "Project Manager",
-      "image": "assets/images/anggota7.jpg",
-      "ig": "https://instagram.com",
-      "gh": "https://github.com",
+      "image": "assets/images/mirza.jpeg",
+      "ig": "https://www.instagram.com/mirr.azmina/",
+      "gh": "hhttps://github.com/mirzaazminaa",
     },
   ];
 
