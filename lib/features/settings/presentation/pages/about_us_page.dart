@@ -49,9 +49,9 @@ class AboutUsPage extends StatelessWidget {
     {
       "name": "Anggota Enam",
       "role": "Quality Assurance",
-      "image": "assets/images/anggota6.jpg",
-      "ig": "https://instagram.com",
-      "gh": "https://github.com",
+      "image": "assets/images/enii.jpg",
+      "ig": "https://www.instagram.com/nainoni__?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==",
+      "gh": "https://github.com/neviori",
     },
     {
       "name": "Anggota Tujuh",
