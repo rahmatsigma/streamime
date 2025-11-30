@@ -39277,7 +39277,7 @@ if(B.b.eL(B.qf,s)!==-1)return r.c}else{s=B.c.V(p,n,m)
 o.b=s
 o.a=m+1
 if(B.b.eL(B.qf,s)!==-1)return r.d
-if(B.b.eL(B.LS,o.b)!==-1)return r.e}throw A.f(A.rM(q+p))},
+if(B.b.eL(B.LT,o.b)!==-1)return r.e}throw A.f(A.rM(q+p))},
 $S:48}
 A.aeD.prototype={
 $1(a){var s,r,q="Invalid HTTP date ",p=this.b,o=this.a,n=o.a,m=B.c.hI(p,a,n)
@@ -98466,7 +98466,7 @@ A.a51.prototype={
 $0(){return A.cT(this.a).ew(null)},
 $S:0}
 A.a52.prototype={
-$2(a,b){return this.a.aaj(a,B.LU[b])},
+$2(a,b){return this.a.aaj(a,B.LS[b])},
 $S:96}
 A.a50.prototype={
 $3(a,b,c){var s=null
@@ -104015,14 +104015,14 @@ B.R=A.n1.prototype
 B.Ah=J.So.prototype
 B.mM=J.nH.prototype
 B.dt={name:0,role:1,image:2,ig:3,gh:4}
-B.OX=new A.bO(B.dt,["Riski Rahmattillah P","Team Lead & Fullstack","assets/images/rahmat.jpg","https://www.instagram.com/rrahmat_prt?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==","https://github.com/rahmatsigma"],t.li)
+B.OW=new A.bO(B.dt,["Riski Rahmattillah P","Team Lead & Fullstack","assets/images/rahmat.jpg","https://www.instagram.com/rrahmat_prt?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==","https://github.com/rahmatsigma"],t.li)
 B.OZ=new A.bO(B.dt,["Anggota Dua","Frontend Developer","assets/images/anggota2.jpg","https://instagram.com","https://github.com"],t.li)
 B.OY=new A.bO(B.dt,["Anggota Tiga","Backend Engineer","assets/images/anggota3.jpg","https://instagram.com","https://github.com"],t.li)
-B.OW=new A.bO(B.dt,["Vhemas Dwi A P","UI/UX Designer","assets/images/vhemas.jpeg","https://www.instagram.com/vhemas_dwi/","https://github.com/VhemasP"],t.li)
-B.OV=new A.bO(B.dt,["Anggota Lima","Mobile Developer","assets/images/anggota5.jpg","https://instagram.com","https://github.com"],t.li)
-B.OU=new A.bO(B.dt,["Anggota Enam","Quality Assurance","assets/images/anggota6.jpg","https://instagram.com","https://github.com"],t.li)
+B.OV=new A.bO(B.dt,["Vhemas Dwi A P","UI/UX Designer","assets/images/vhemas.jpeg","https://www.instagram.com/vhemas_dwi/","https://github.com/VhemasP"],t.li)
+B.OU=new A.bO(B.dt,["Anggota Lima","Mobile Developer","assets/images/anggota5.jpg","https://instagram.com","https://github.com"],t.li)
+B.OX=new A.bO(B.dt,["Anggota Enam","Quality Assurance","assets/images/enii.jpg","https://www.instagram.com/nainoni__?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==","https://github.com/neviori"],t.li)
 B.OT=new A.bO(B.dt,["Anggota Tujuh","Project Manager","assets/images/anggota7.jpg","https://instagram.com","https://github.com"],t.li)
-B.LU=s([B.OX,B.OZ,B.OY,B.OW,B.OV,B.OU,B.OT],A.a5("G<a8<k,k>>"))
+B.LS=s([B.OW,B.OZ,B.OY,B.OV,B.OU,B.OX,B.OT],A.a5("G<a8<k,k>>"))
 B.CI=new A.vt(null)
 B.dN=new A.vu(0,"nothing")
 B.jr=new A.vu(1,"requestedFocus")
@@ -105245,15 +105245,15 @@ B.L3=s([2.18349805,1.20311921],t.n)
 B.MT=s([2.33888662,1.28698796],t.n)
 B.MV=s([2.48660575,1.36351941],t.n)
 B.LQ=s([2.62226596,1.44717976],t.n)
-B.LT=s([2.7514899,1.53385819],t.n)
+B.LU=s([2.7514899,1.53385819],t.n)
 B.Mj=s([3.36298265,1.98288283],t.n)
 B.M0=s([4.08649929,2.23811846],t.n)
 B.Ma=s([4.85481134,2.47563463],t.n)
 B.LR=s([5.62945551,2.72948597],t.n)
 B.LY=s([6.43023796,2.98020421],t.n)
-B.qb=s([B.LX,B.L3,B.MT,B.MV,B.LQ,B.LT,B.Mj,B.M0,B.Ma,B.LR,B.LY],t.zg)
+B.qb=s([B.LX,B.L3,B.MT,B.MV,B.LQ,B.LU,B.Mj,B.M0,B.Ma,B.LR,B.LY],t.zg)
 B.LP=s([B.jx,B.jy],A.a5("G<Bq>"))
-B.LS=s(["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],t.ee)
+B.LT=s(["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],t.ee)
 B.bn=new A.lZ(0,"label")
 B.b2=new A.lZ(1,"avatar")
 B.cg=new A.lZ(2,"deleteIcon")
