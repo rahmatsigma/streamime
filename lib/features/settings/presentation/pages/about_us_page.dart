@@ -15,7 +15,8 @@ class AboutUsPage extends StatelessWidget {
       "name": "Riski Rahmattillah P",
       "role": "Team Lead & Fullstack",
       "image": "assets/images/rahmat.jpg",
-      "ig": "https://www.instagram.com/rrahmat_prt?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==",
+      "ig":
+          "https://www.instagram.com/rrahmat_prt?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==",
       "gh": "https://github.com/rahmatsigma",
     },
     {
@@ -40,17 +41,18 @@ class AboutUsPage extends StatelessWidget {
       "gh": "https://github.com/VhemasP",
     },
     {
-      "name": "Anggota Lima",
-      "role": "Mobile Developer",
-      "image": "assets/images/anggota5.jpg",
-      "ig": "https://instagram.com",
-      "gh": "https://github.com",
+      "name": "Helena Kusuma Wardhani",
+      "role": "Frontend Developer",
+      "image": "assets/images/helena.jpg",
+      "ig": "https://www.instagram.com/nanaelzy?igsh=d2h6ODV6enlidmFp",
+      "gh": "https://github.com/Nanaelzy",
     },
     {
       "name": "Eni Noviasari",
       "role": "Quality Assurance",
       "image": "assets/images/enii.jpg",
-      "ig": "https://www.instagram.com/nainoni__?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==",
+      "ig":
+          "https://www.instagram.com/nainoni__?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==",
       "gh": "https://github.com/neviori",
     },
     {
