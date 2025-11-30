@@ -19,11 +19,11 @@ class AboutUsPage extends StatelessWidget {
       "gh": "https://github.com/rahmatsigma",
     },
     {
-      "name": "Anggota Dua",
+      "name": "Rendy Syahputra R",
       "role": "Frontend Developer",
-      "image": "assets/images/anggota2.jpg",
-      "ig": "https://instagram.com",
-      "gh": "https://github.com",
+      "image": "assets/images/rendy.jpg",
+      "ig": "https://www.instagram.com/rendymr.ius",
+      "gh": "https://github.com/RendyProbe",
     },
     {
       "name": "Renza Alvianino",
