@@ -33,11 +33,11 @@ class AboutUsPage extends StatelessWidget {
       "gh": "https://github.com",
     },
     {
-      "name": "Anggota Empat",
+      "name": "Vhemas Dwi A P",
       "role": "UI/UX Designer",
-      "image": "assets/images/anggota4.jpg",
-      "ig": "https://instagram.com",
-      "gh": "https://github.com",
+      "image": "assets/images/vhemas.jpeg",
+      "ig": "https://www.instagram.com/vhemas_dwi/",
+      "gh": "https://github.com/VhemasP",
     },
     {
       "name": "Anggota Lima",
