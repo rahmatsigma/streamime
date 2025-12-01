@@ -5,11 +5,7 @@ class MangaGridCard extends StatelessWidget {
   final String title;
   final String coverUrl;
 
-  const MangaGridCard({
-    super.key,
-    required this.title,
-    required this.coverUrl,
-  });
+  const MangaGridCard({super.key, required this.title, required this.coverUrl});
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +35,9 @@ class MangaGridCard extends StatelessWidget {
                 if (progress == null) return child;
                 return Container(
                   color: Colors.grey[900],
-                  child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                  child: const Center(
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
                 );
               },
               errorBuilder: (context, error, stackTrace) {
@@ -82,7 +80,11 @@ class MangaGridCard extends StatelessWidget {
                   fontSize: 13,
                   // Tambahan shadow teks biar makin jelas
                   shadows: [
-                    Shadow(blurRadius: 2, color: Colors.black, offset: Offset(1, 1)),
+                    Shadow(
+                      blurRadius: 2,
+                      color: Colors.black,
+                      offset: Offset(1, 1),
+                    ),
                   ],
                 ),
                 maxLines: 2,

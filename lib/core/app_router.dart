@@ -18,10 +18,7 @@ class AppRouter {
         path: '/splash',
         builder: (context, state) => const SplashScreen(),
       ),
-      GoRoute(
-        path: '/',
-        builder: (context, state) => const HomePage(),
-      ),
+      GoRoute(path: '/', builder: (context, state) => const HomePage()),
 
       // Detail Manga
       GoRoute(
@@ -32,7 +29,7 @@ class AppRouter {
         },
       ),
 
-      // Reader 
+      // Reader
       GoRoute(
         path: '/read/:chapterId',
         builder: (context, state) {
@@ -43,34 +40,28 @@ class AppRouter {
                 .map((e) => Map<String, dynamic>.from(e as Map))
                 .toList();
           }
-          
-          return ChapterReadPage(
-            chapterId: chapterId, 
-            chapters: chapterList, 
-          );
+
+          return ChapterReadPage(chapterId: chapterId, chapters: chapterList);
         },
       ),
 
       // Login Page
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginPage(),
-      ),
+      GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
 
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterPage(),
       ),
 
-      // Favorite Page 
+      // Favorite Page
       GoRoute(
         path: '/favorites',
         builder: (context, state) {
-          return const FavoritePage(); 
+          return const FavoritePage();
         },
       ),
 
-      // History Page 
+      // History Page
       GoRoute(
         path: '/history',
         builder: (context, state) {
@@ -84,10 +75,7 @@ class AppRouter {
         builder: (context, state) => const SettingsPage(),
       ),
 
-      GoRoute(
-        path: '/about',
-        builder: (context, state) => const AboutUsPage(),
-      ),
+      GoRoute(path: '/about', builder: (context, state) => const AboutUsPage()),
     ],
   );
 }

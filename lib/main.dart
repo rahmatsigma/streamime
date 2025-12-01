@@ -13,10 +13,8 @@ import 'package:manga_read/features/auth/logic/auth_cubit.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   final IMangaRepository mangaRepository = MangaRepositoryImpl();
   runApp(
@@ -24,16 +22,9 @@ Future<void> main() async {
       value: mangaRepository,
       child: MultiBlocProvider(
         providers: [
-          BlocProvider(
-            create: (context) => MangaListCubit(mangaRepository),
-          ),
-          BlocProvider(
-            create: (context) => ThemeCubit(),
-          ),
-          BlocProvider(
-            create: (context) => AuthCubit(),
-            lazy: false,
-          ),
+          BlocProvider(create: (context) => MangaListCubit(mangaRepository)),
+          BlocProvider(create: (context) => ThemeCubit()),
+          BlocProvider(create: (context) => AuthCubit(), lazy: false),
         ],
         child: const MangaReadApp(),
       ),

@@ -117,7 +117,9 @@ class _HomePageState extends State<HomePage> {
     final repo = context.read<IMangaRepository>() as MangaRepositoryImpl;
 
     return StreamBuilder<List<Map<String, dynamic>>>(
-      stream: repo.getHistoryStream(userId).map((list) => list.take(1).toList()),
+      stream: repo
+          .getHistoryStream(userId)
+          .map((list) => list.take(1).toList()),
       builder: (context, snapshot) {
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return const SizedBox.shrink();
@@ -125,7 +127,7 @@ class _HomePageState extends State<HomePage> {
 
         final history = snapshot.data!.first;
         final String chapterId = history['chapterId'] ?? '';
-        
+
         if (chapterId.isEmpty) return const SizedBox.shrink();
 
         return Padding(
@@ -157,11 +159,12 @@ class _HomePageState extends State<HomePage> {
                           bottomLeft: Radius.circular(12),
                         ),
                         child: Image.network(
-                          history['coverUrl'], 
+                          history['coverUrl'],
                           width: 80,
                           height: double.infinity,
                           fit: BoxFit.cover,
-                          errorBuilder: (_,__,___) => Container(width: 80, color: Colors.grey),
+                          errorBuilder: (_, __, ___) =>
+                              Container(width: 80, color: Colors.grey),
                         ),
                       ),
                       Expanded(
@@ -173,19 +176,28 @@ class _HomePageState extends State<HomePage> {
                             children: [
                               Text(
                                 history['title'] ?? 'Manga',
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 history['lastChapter'] ?? 'Chapter ?',
-                                style: const TextStyle(color: Colors.blueAccent, fontSize: 13),
+                                style: const TextStyle(
+                                  color: Colors.blueAccent,
+                                  fontSize: 13,
+                                ),
                               ),
                               const SizedBox(height: 4),
                               const Text(
                                 "Ketuk untuk lanjut baca",
-                                style: TextStyle(color: Colors.grey, fontSize: 11),
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 11,
+                                ),
                               ),
                             ],
                           ),
@@ -193,7 +205,11 @@ class _HomePageState extends State<HomePage> {
                       ),
                       const Padding(
                         padding: EdgeInsets.only(right: 16.0),
-                        child: Icon(Icons.play_circle_fill, size: 40, color: Colors.blueAccent),
+                        child: Icon(
+                          Icons.play_circle_fill,
+                          size: 40,
+                          color: Colors.blueAccent,
+                        ),
                       ),
                     ],
                   ),
@@ -211,10 +227,10 @@ class _HomePageState extends State<HomePage> {
     final authState = context.watch<AuthCubit>().state;
     final bool isLoggedIn = authState.status == AuthStatus.authenticated;
     final String? userId = authState.user?.uid;
-    
+
     String displayName = authState.user?.displayName ?? 'User';
     if (displayName.contains(' ')) {
-      displayName = displayName.split(' ')[0]; 
+      displayName = displayName.split(' ')[0];
     }
 
     final double screenWidth = MediaQuery.of(context).size.width;
@@ -232,18 +248,20 @@ class _HomePageState extends State<HomePage> {
               : Row(
                   children: [
                     Text(
-                      isMobile && isLoggedIn ? 'MangaRead' : 'MangaRead - Populer',
+                      isMobile && isLoggedIn
+                          ? 'MangaRead'
+                          : 'MangaRead - Populer',
                       style: TextStyle(
-                        fontSize: isMobile ? 18 : 22, 
-                        fontWeight: FontWeight.w600
+                        fontSize: isMobile ? 18 : 22,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     if (isLoggedIn) ...[
-                      const Spacer(), 
+                      const Spacer(),
                       Container(
                         padding: EdgeInsets.symmetric(
-                          horizontal: isMobile ? 8 : 16, 
-                          vertical: 6
+                          horizontal: isMobile ? 8 : 16,
+                          vertical: 6,
                         ),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.05),
@@ -262,7 +280,7 @@ class _HomePageState extends State<HomePage> {
                             Text(
                               '$displayName 👋',
                               style: TextStyle(
-                                fontSize: isMobile ? 13 : 16, 
+                                fontSize: isMobile ? 13 : 16,
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -270,10 +288,10 @@ class _HomePageState extends State<HomePage> {
                           ],
                         ),
                       ),
-                      const Spacer(), 
+                      const Spacer(),
                     ] else ...[
-                      const Spacer(), 
-                    ]
+                      const Spacer(),
+                    ],
                   ],
                 ),
         ),
@@ -295,7 +313,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           if (_isSearching)
-             Padding(
+            Padding(
               padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
               child: DecoratedBox(
                 decoration: BoxDecoration(
@@ -318,7 +336,7 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      
+
       body: BlocBuilder<MangaListCubit, MangaListState>(
         builder: (context, state) {
           if (state is MangaListLoading) {
@@ -327,7 +345,7 @@ class _HomePageState extends State<HomePage> {
           if (state is MangaListError) {
             return Center(child: Text('Error: ${state.message}'));
           }
-          
+
           List<dynamic> mangaList = [];
           bool isLoadingMore = false;
 
@@ -338,52 +356,52 @@ class _HomePageState extends State<HomePage> {
 
           return RefreshIndicator(
             onRefresh: () async {
-               if (_isSearching) {
-                  await context.read<MangaListCubit>().searchManga(_searchController.text);
-                } else {
-                  await context.read<MangaListCubit>().getPopularManga(page: 1);
-                }
+              if (_isSearching) {
+                await context.read<MangaListCubit>().searchManga(
+                  _searchController.text,
+                );
+              } else {
+                await context.read<MangaListCubit>().getPopularManga(page: 1);
+              }
             },
             child: CustomScrollView(
               controller: _scrollController,
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
                 if (!_isSearching)
-                  SliverToBoxAdapter(
-                    child: _buildContinueReading(userId),
-                  ),
+                  SliverToBoxAdapter(child: _buildContinueReading(userId)),
 
-                if (mangaList.isEmpty) 
-                   const SliverToBoxAdapter(
-                     child: SizedBox(
-                       height: 200,
-                       child: Center(child: Text("Tidak ada data ditemukan.")),
-                     ),
-                   )
+                if (mangaList.isEmpty)
+                  const SliverToBoxAdapter(
+                    child: SizedBox(
+                      height: 200,
+                      child: Center(child: Text("Tidak ada data ditemukan.")),
+                    ),
+                  )
                 else
                   SliverPadding(
                     padding: EdgeInsets.all(3.w),
                     sliver: SliverGrid(
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: screenWidth < 600 ? 2 : (screenWidth < 900 ? 3 : 5),
+                        crossAxisCount: screenWidth < 600
+                            ? 2
+                            : (screenWidth < 900 ? 3 : 5),
                         childAspectRatio: 0.65,
                         crossAxisSpacing: 3.w,
                         mainAxisSpacing: 3.w,
                       ),
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final manga = mangaList[index];
-                          return GestureDetector(
-                            onTap: () => context.push('/manga-detail/${manga['id']}'),
-                            child: MangaGridCard(
-                              key: ValueKey(manga['id']),
-                              title: manga['title'],
-                              coverUrl: manga['coverUrl'],
-                            ),
-                          );
-                        },
-                        childCount: mangaList.length,
-                      ),
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final manga = mangaList[index];
+                        return GestureDetector(
+                          onTap: () =>
+                              context.push('/manga-detail/${manga['id']}'),
+                          child: MangaGridCard(
+                            key: ValueKey(manga['id']),
+                            title: manga['title'],
+                            coverUrl: manga['coverUrl'],
+                          ),
+                        );
+                      }, childCount: mangaList.length),
                     ),
                   ),
 
@@ -489,8 +507,11 @@ class _HomePageState extends State<HomePage> {
                       color: Colors.redAccent.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.logout,
-                        color: Colors.redAccent, size: 20),
+                    child: const Icon(
+                      Icons.logout,
+                      color: Colors.redAccent,
+                      size: 20,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   const Expanded(
@@ -615,9 +636,9 @@ class _HomePageState extends State<HomePage> {
             onPressed: () {
               Navigator.pop(dialogContext);
               context.read<AuthCubit>().signOut();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Berhasil logout.')),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('Berhasil logout.')));
             },
             child: const Text("Keluar"),
           ),

@@ -34,14 +34,14 @@ class AuthCubit extends Cubit<AuthState> {
       try {
         // 1. Paksa reload data user dari server Firebase
         await user.reload();
-        
+
         // 2. Ambil data user terbaru (yang namanya sudah berubah)
         final updatedUser = _auth.currentUser;
-        
+
         // 3. Emit ulang state Authenticated dengan data baru
         // Ini akan memicu UI (AppBar Home) untuk berubah otomatis
         if (updatedUser != null) {
-           emit(AuthState(status: AuthStatus.authenticated, user: updatedUser));
+          emit(AuthState(status: AuthStatus.authenticated, user: updatedUser));
         }
       } catch (e) {
         print("Gagal reload user data: $e");

@@ -13,8 +13,9 @@ class ReaderPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => ReaderCubit(ReaderRepositoryImpl())
-        ..fetchChapterPages(chapterId), // Langsung panggil fetch
+      create: (context) =>
+          ReaderCubit(ReaderRepositoryImpl())
+            ..fetchChapterPages(chapterId), // Langsung panggil fetch
       child: BlocBuilder<ReaderCubit, ReaderState>(
         builder: (context, state) {
           return Scaffold(
@@ -27,7 +28,9 @@ class ReaderPage extends StatelessWidget {
                 icon: const Icon(Icons.arrow_back_ios_new),
                 onPressed: () => context.pop(),
               ),
-              title: Text(state is ReaderLoaded ? state.chapter['title'] : 'Membaca...'),
+              title: Text(
+                state is ReaderLoaded ? state.chapter['title'] : 'Membaca...',
+              ),
             ),
             body: Builder(
               builder: (context) {
@@ -54,8 +57,8 @@ class ReaderPage extends StatelessWidget {
                       // Tampilkan setiap halaman sebagai gambar
                       return Image.network(
                         ImageProxy.proxy(imageUrl),
-                        fit: BoxFit.fitWidth, // Buat gambar memenuhi lebar layar
-
+                        fit:
+                            BoxFit.fitWidth, // Buat gambar memenuhi lebar layar
                         // Tampilkan loading indicator per gambar
                         loadingBuilder: (context, child, loadingProgress) {
                           if (loadingProgress == null) return child;

@@ -20,9 +20,9 @@ class Manga extends Comic {
     String readingDirection = 'Right to Left',
     String origin = 'Japan',
     List<Map<String, dynamic>> chapterList = const [],
-  })  : _readingDirection = readingDirection,
-        _origin = origin,
-        _chapterList = List<Map<String, dynamic>>.from(chapterList);
+  }) : _readingDirection = readingDirection,
+       _origin = origin,
+       _chapterList = List<Map<String, dynamic>>.from(chapterList);
 
   String get readingDirection => _readingDirection;
   set readingDirection(String value) {
@@ -68,7 +68,8 @@ class Manga extends Comic {
     }
 
     // 3. SINOPSIS
-    String? rawDesc = (json['desc'] ?? json['description'] ?? json['synopsis'])?.toString();
+    String? rawDesc = (json['desc'] ?? json['description'] ?? json['synopsis'])
+        ?.toString();
     if (rawDesc != null && (rawDesc.trim().isEmpty || rawDesc == 'null')) {
       rawDesc = null;
     }
@@ -82,16 +83,23 @@ class Manga extends Comic {
     if (rawGenres != null) {
       if (rawGenres is List) {
         // Jika formatnya List: ["Action", "Magic"] atau [{"name": "Action"}]
-        genres = rawGenres.map((g) {
-          if (g is Map) {
-            // Ambil nama dari dalam object
-            return (g['name'] ?? g['title'] ?? g['genre'] ?? '').toString();
-          }
-          return g.toString();
-        }).where((s) => s.isNotEmpty).toList(); // Hapus yang kosong
+        genres = rawGenres
+            .map((g) {
+              if (g is Map) {
+                // Ambil nama dari dalam object
+                return (g['name'] ?? g['title'] ?? g['genre'] ?? '').toString();
+              }
+              return g.toString();
+            })
+            .where((s) => s.isNotEmpty)
+            .toList(); // Hapus yang kosong
       } else if (rawGenres is String) {
         // Jika formatnya String panjang: "Action, Magic, Fantasy"
-        genres = rawGenres.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+        genres = rawGenres
+            .split(',')
+            .map((e) => e.trim())
+            .where((e) => e.isNotEmpty)
+            .toList();
       }
     }
     // -------------------------------
@@ -105,7 +113,8 @@ class Manga extends Comic {
       parsedChapters = (json['chapters'] as List).map((ch) {
         return {
           'id': ch['id']?.toString() ?? '',
-          'title': ch['name'] ?? ch['title'] ?? ch['chapter_number'] ?? 'Chapter ?',
+          'title':
+              ch['name'] ?? ch['title'] ?? ch['chapter_number'] ?? 'Chapter ?',
           'date': ch['created_at'] ?? '',
           'mangaId': id,
         };

@@ -44,7 +44,10 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text("Filter Pencarian", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text(
+                "Filter Pencarian",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
               TextButton(
                 onPressed: () {
                   // Reset Filter
@@ -54,14 +57,17 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                   });
                 },
                 child: const Text("Reset"),
-              )
+              ),
             ],
           ),
           const Divider(),
-          
+
           // 1. Filter Tipe
           const SizedBox(height: 10),
-          const Text("Tipe Komik", style: TextStyle(fontWeight: FontWeight.w600)),
+          const Text(
+            "Tipe Komik",
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
@@ -111,9 +117,14 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
               },
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
-              child: const Text("Terapkan Filter", style: TextStyle(fontSize: 16)),
+              child: const Text(
+                "Terapkan Filter",
+                style: TextStyle(fontSize: 16),
+              ),
             ),
           ),
           const SizedBox(height: 10),

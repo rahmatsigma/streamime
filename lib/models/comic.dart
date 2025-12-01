@@ -32,16 +32,16 @@ class Comic {
     int? chapters,
     String? author,
     String? type,
-  })  : _id = id,
-        _title = title,
-        _titleEnglish = titleEnglish,
-        _synopsis = synopsis,
-        _imageUrl = imageUrl,
-        _genres = List<String>.from(genres),
-        _status = status,
-        _chapters = chapters,
-        _author = author,
-        _type = type;
+  }) : _id = id,
+       _title = title,
+       _titleEnglish = titleEnglish,
+       _synopsis = synopsis,
+       _imageUrl = imageUrl,
+       _genres = List<String>.from(genres),
+       _status = status,
+       _chapters = chapters,
+       _author = author,
+       _type = type;
 
   String get id => _id;
   set id(String value) {

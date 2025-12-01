@@ -8,7 +8,8 @@ class ReaderRepositoryImpl implements IReaderRepository {
 
   @override
   Future<Either<Failure, Map<String, dynamic>>> getChapterPages(
-      String chapterId) async {
+    String chapterId,
+  ) async {
     try {
       // 1. Panggil endpoint /at-home/server/{id}
       final response = await dio.get('/at-home/server/$chapterId');
@@ -29,10 +30,7 @@ class ReaderRepositoryImpl implements IReaderRepository {
         }
 
         // 4. Kembalikan daftar URL yang sudah lengkap
-        return Right({
-          'title': title,
-          'pages': pageUrls,
-        });
+        return Right({'title': title, 'pages': pageUrls});
       } else {
         return Left(Exception('Gagal memuat data server chapter'));
       }

@@ -34,7 +34,7 @@ class FavoritePage extends StatelessWidget {
                 if (snapshot.hasError) {
                   return Center(child: Text("Error: ${snapshot.error}"));
                 }
-                
+
                 final favorites = snapshot.data ?? [];
 
                 if (favorites.isEmpty) {
@@ -42,9 +42,16 @@ class FavoritePage extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.favorite_border, size: 60, color: Colors.grey),
+                        Icon(
+                          Icons.favorite_border,
+                          size: 60,
+                          color: Colors.grey,
+                        ),
                         SizedBox(height: 16),
-                        Text('Belum ada favorit.', style: TextStyle(color: Colors.grey)),
+                        Text(
+                          'Belum ada favorit.',
+                          style: TextStyle(color: Colors.grey),
+                        ),
                       ],
                     ),
                   );
@@ -80,7 +87,7 @@ class FavoritePage extends StatelessWidget {
               height: 120,
               child: Image.network(
                 // Gunakan Proxy agar gambar aman
-                ImageProxy.proxy(manga.imageUrl), 
+                ImageProxy.proxy(manga.imageUrl),
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => const Icon(Icons.broken_image),
               ),
@@ -93,21 +100,30 @@ class FavoritePage extends StatelessWidget {
                 children: [
                   Text(
                     manga.title,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 8),
                   if (manga.type != null)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.blue.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         manga.type!,
-                        style: const TextStyle(color: Colors.blue, fontSize: 10),
+                        style: const TextStyle(
+                          color: Colors.blue,
+                          fontSize: 10,
+                        ),
                       ),
                     ),
                 ],
@@ -115,7 +131,11 @@ class FavoritePage extends StatelessWidget {
             ),
             const Padding(
               padding: EdgeInsets.all(16.0),
-              child: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+              child: Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: Colors.grey,
+              ),
             ),
           ],
         ),

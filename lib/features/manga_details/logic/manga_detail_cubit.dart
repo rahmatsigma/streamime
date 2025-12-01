@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:manga_read/features/home/data/repositories/i_manga_repository.dart';
-import 'package:manga_read/features/home/data/repositories/manga_repository_impl.dart'; 
+import 'package:manga_read/features/home/data/repositories/manga_repository_impl.dart';
 import 'manga_detail_state.dart';
 
 class MangaDetailCubit extends Cubit<MangaDetailState> {
@@ -14,30 +14,41 @@ class MangaDetailCubit extends Cubit<MangaDetailState> {
 
     final result = await _repository.getMangaDetail(id: id);
 
-    result.fold(
-      (failure) => emit(MangaDetailError(failure.message)),
-      (manga) async {
-        bool isFav = false;
-        
-        // Cek ke Firestore kalau user login
-        if (userId != null && _repository is MangaRepositoryImpl) {
-           isFav = await (_repository as MangaRepositoryImpl).isMangaFavorite(userId, id);
-        }
-        
-        // Emit Loaded dengan status favorite
-        emit(MangaDetailLoaded(manga, isFavorite: isFav));
-      },
-    );
+    result.fold((failure) => emit(MangaDetailError(failure.message)), (
+      manga,
+    ) async {
+      bool isFav = false;
+
+      // Cek ke Firestore kalau user login
+      if (userId != null && _repository is MangaRepositoryImpl) {
+        isFav = await (_repository as MangaRepositoryImpl).isMangaFavorite(
+          userId,
+          id,
+        );
+      }
+
+      // Emit Loaded dengan status favorite
+      emit(MangaDetailLoaded(manga, isFavorite: isFav));
+    });
   }
 
   // 2. Simpan History (Fitur yang tadi kita bahas)
-  Future<void> saveHistoryIfLoggedIn(String? userId, String chapterTitle, String chapterId) async {
+  Future<void> saveHistoryIfLoggedIn(
+    String? userId,
+    String chapterTitle,
+    String chapterId,
+  ) async {
     if (state is MangaDetailLoaded && userId != null) {
       final currentManga = (state as MangaDetailLoaded).manga;
-      
+
       if (_repository is MangaRepositoryImpl) {
         // Kirim chapterId ke repository
-        await (_repository as MangaRepositoryImpl).addToHistory(userId, currentManga, chapterTitle, chapterId);
+        await (_repository as MangaRepositoryImpl).addToHistory(
+          userId,
+          currentManga,
+          chapterTitle,
+          chapterId,
+        );
       }
     }
   }
@@ -55,7 +66,11 @@ class MangaDetailCubit extends Cubit<MangaDetailState> {
       // Kirim ke Backend
       if (_repository is MangaRepositoryImpl) {
         try {
-          await (_repository as MangaRepositoryImpl).toggleFavorite(userId, currentManga, currentStatus);
+          await (_repository as MangaRepositoryImpl).toggleFavorite(
+            userId,
+            currentManga,
+            currentStatus,
+          );
         } catch (e) {
           // Kalau gagal simpan, balikin warna hatinya
           emit(currentState.copyWith(isFavorite: currentStatus));

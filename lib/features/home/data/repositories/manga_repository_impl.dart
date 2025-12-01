@@ -24,7 +24,11 @@ class MangaRepositoryImpl implements IMangaRepository {
   }
 
   // 2. Tambah atau Hapus Favorite (Toggle)
-  Future<void> toggleFavorite(String uid, Manga manga, bool isCurrentlyFavorite) async {
+  Future<void> toggleFavorite(
+    String uid,
+    Manga manga,
+    bool isCurrentlyFavorite,
+  ) async {
     final docRef = FirebaseFirestore.instance
         .collection('users')
         .doc(uid)
@@ -47,7 +51,12 @@ class MangaRepositoryImpl implements IMangaRepository {
   }
 
   // 3. Simpan History Baca
-  Future<void> addToHistory(String uid, Manga manga, String chapterTitle, String chapterId) async {
+  Future<void> addToHistory(
+    String uid,
+    Manga manga,
+    String chapterTitle,
+    String chapterId,
+  ) async {
     try {
       await FirebaseFirestore.instance
           .collection('users')
@@ -55,13 +64,13 @@ class MangaRepositoryImpl implements IMangaRepository {
           .collection('history')
           .doc(manga.id)
           .set({
-        'mangaId': manga.id,
-        'title': manga.title,
-        'coverUrl': manga.imageUrl,
-        'lastChapter': chapterTitle,
-        'chapterId': chapterId,
-        'lastReadAt': FieldValue.serverTimestamp(),
-      });
+            'mangaId': manga.id,
+            'title': manga.title,
+            'coverUrl': manga.imageUrl,
+            'lastChapter': chapterTitle,
+            'chapterId': chapterId,
+            'lastReadAt': FieldValue.serverTimestamp(),
+          });
     } catch (e) {
       print("Gagal simpan history: $e");
     }
@@ -72,11 +81,13 @@ class MangaRepositoryImpl implements IMangaRepository {
   // ==========================================
 
   @override
-  Future<Either<Failure, MangaList>> getPopularManga({required int page}) async {
+  Future<Either<Failure, MangaList>> getPopularManga({
+    required int page,
+  }) async {
     try {
       final response = await dio.get(
-        '/api/comics', 
-        queryParameters: {'page': page}, 
+        '/api/comics',
+        queryParameters: {'page': page},
       );
 
       final List<dynamic> rawData = _extractList(response.data);
@@ -91,9 +102,8 @@ class MangaRepositoryImpl implements IMangaRepository {
           'status': mangaObj.status,
         };
       }).toList();
-      
-      return Right(mangaList);
 
+      return Right(mangaList);
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) {
         return Left(NotFoundException('Manga not found'));
@@ -105,31 +115,32 @@ class MangaRepositoryImpl implements IMangaRepository {
   }
 
   @override
-  Future<Either<Failure, MangaList>> searchManga({required String query}) async {
+  Future<Either<Failure, MangaList>> searchManga({
+    required String query,
+  }) async {
     try {
       final encodedQuery = Uri.encodeComponent(query);
       final response = await dio.get(
-        '/api/search', 
-        queryParameters: {'q': encodedQuery}
+        '/api/search',
+        queryParameters: {'q': encodedQuery},
       );
 
       final List<dynamic> rawData = _extractList(response.data);
-      
+
       final MangaList mangaList = rawData.map((json) {
         final mangaObj = Manga.fromApi(json);
         return {
           'id': mangaObj.id,
           'title': mangaObj.title,
-          'coverUrl': mangaObj.imageUrl, 
-          'type': mangaObj.type,     
+          'coverUrl': mangaObj.imageUrl,
+          'type': mangaObj.type,
           'status': mangaObj.status,
         };
       }).toList();
-      
-      return Right(mangaList);
 
+      return Right(mangaList);
     } on DioException catch (e) {
-       if (e.response?.statusCode == 404) {
+      if (e.response?.statusCode == 404) {
         return Left(NotFoundException('Manga not found'));
       }
       return Left(ServerException(e.message ?? 'Unknown error'));
@@ -160,7 +171,9 @@ class MangaRepositoryImpl implements IMangaRepository {
   }
 
   @override
-  Future<Either<Failure, List<String>>> getChapterImages({required String chapterId}) async {
+  Future<Either<Failure, List<String>>> getChapterImages({
+    required String chapterId,
+  }) async {
     try {
       print(">>> REQUEST CHAPTER ID: $chapterId");
       final response = await dio.get('/api/chapters/$chapterId');
@@ -171,15 +184,20 @@ class MangaRepositoryImpl implements IMangaRepository {
 
         if (data != null && data['images'] is List) {
           final List images = data['images'];
-          imageUrls = images.map((img) {
-            return (img['url'] ?? '').toString();
-          }).where((url) => url.isNotEmpty).toList();
+          imageUrls = images
+              .map((img) {
+                return (img['url'] ?? '').toString();
+              })
+              .where((url) => url.isNotEmpty)
+              .toList();
         }
-        
+
         print(">>> DAPAT ${imageUrls.length} GAMBAR");
         return Right(imageUrls);
       } else {
-        return Left(ServerException('Gagal load chapter: ${response.statusCode}'));
+        return Left(
+          ServerException('Gagal load chapter: ${response.statusCode}'),
+        );
       }
     } on DioException catch (e) {
       return Left(ServerException(e.message ?? 'Error Koneksi'));
@@ -197,20 +215,21 @@ class MangaRepositoryImpl implements IMangaRepository {
         .orderBy('addedAt', descending: true) // Urutkan dari yang baru ditambah
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) {
-        final data = doc.data();
-        // Kita mapping manual dari Firestore ke Object Manga biar aman
-        return Manga(
-          id: data['id'],
-          title: data['title'],
-          imageUrl: data['coverUrl'] ?? '', // Nama field di firestore 'coverUrl'
-          genres: [], // Data minimalis
-          status: 'Unknown',
-          author: '',
-          type: data['type'],
-        );
-      }).toList();
-    });
+          return snapshot.docs.map((doc) {
+            final data = doc.data();
+            // Kita mapping manual dari Firestore ke Object Manga biar aman
+            return Manga(
+              id: data['id'],
+              title: data['title'],
+              imageUrl:
+                  data['coverUrl'] ?? '', // Nama field di firestore 'coverUrl'
+              genres: [], // Data minimalis
+              status: 'Unknown',
+              author: '',
+              type: data['type'],
+            );
+          }).toList();
+        });
   }
 
   // 2. STREAM HISTORY
@@ -219,11 +238,14 @@ class MangaRepositoryImpl implements IMangaRepository {
         .collection('users')
         .doc(uid)
         .collection('history')
-        .orderBy('lastReadAt', descending: true) // Yang terakhir dibaca paling atas
+        .orderBy(
+          'lastReadAt',
+          descending: true,
+        ) // Yang terakhir dibaca paling atas
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) => doc.data()).toList();
-    });
+          return snapshot.docs.map((doc) => doc.data()).toList();
+        });
   }
 
   // Helper

@@ -67,11 +67,10 @@ class _RegisterPageState extends State<RegisterPage> {
             duration: Duration(seconds: 2),
           ),
         );
-        context.go('/login'); 
+        context.go('/login');
       }
-      
-      // -------------------------------
 
+      // -------------------------------
     } on FirebaseAuthException catch (e) {
       setState(() {
         _errorMessage = e.message ?? "Gagal mendaftar.";

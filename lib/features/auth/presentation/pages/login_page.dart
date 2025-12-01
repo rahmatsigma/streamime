@@ -70,7 +70,7 @@ class _LoginPageState extends State<LoginPage> {
       backgroundColor: colorScheme.surface,
       body: Stack(
         // --- PERBAIKAN 1: Paksa Stack memenuhi layar ---
-        fit: StackFit.expand, 
+        fit: StackFit.expand,
         children: [
           // 1. Background Image
           Positioned.fill(
@@ -86,7 +86,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
           ),
-          
+
           // 2. Gradient Overlay
           Positioned.fill(
             child: DecoratedBox(
@@ -108,7 +108,7 @@ class _LoginPageState extends State<LoginPage> {
             child: Stack(
               children: [
                 // --- PERBAIKAN 2: Center agar form di tengah vertikal ---
-                Center( 
+                Center(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 24,
@@ -120,7 +120,7 @@ class _LoginPageState extends State<LoginPage> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const SizedBox(height: 12),
-                          
+
                           // LOGO
                           Hero(
                             tag: 'logo',
@@ -147,7 +147,7 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             ),
                           ),
-                          
+
                           const SizedBox(height: 18),
                           Text(
                             'Masuk ke MangaRead',
@@ -192,7 +192,8 @@ class _LoginPageState extends State<LoginPage> {
                                 child: Padding(
                                   padding: const EdgeInsets.all(22),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
                                     children: [
                                       // INPUT EMAIL
                                       const Text(
@@ -214,15 +215,17 @@ class _LoginPageState extends State<LoginPage> {
                                             Icons.email_outlined,
                                           ),
                                           border: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(14),
+                                            borderRadius: BorderRadius.circular(
+                                              14,
+                                            ),
                                           ),
                                         ),
-                                        keyboardType: TextInputType.emailAddress,
+                                        keyboardType:
+                                            TextInputType.emailAddress,
                                       ),
-                                      
+
                                       const SizedBox(height: 16),
-                                      
+
                                       // INPUT PASSWORD
                                       const Text(
                                         'Password',
@@ -245,7 +248,8 @@ class _LoginPageState extends State<LoginPage> {
                                           suffixIcon: IconButton(
                                             icon: Icon(
                                               _obscurePassword
-                                                  ? Icons.visibility_off_outlined
+                                                  ? Icons
+                                                        .visibility_off_outlined
                                                   : Icons.visibility_outlined,
                                             ),
                                             onPressed: () {
@@ -256,15 +260,16 @@ class _LoginPageState extends State<LoginPage> {
                                             },
                                           ),
                                           border: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(14),
+                                            borderRadius: BorderRadius.circular(
+                                              14,
+                                            ),
                                           ),
                                         ),
                                         obscureText: _obscurePassword,
                                       ),
-                                      
+
                                       const SizedBox(height: 18),
-                                      
+
                                       // ERROR MESSAGE
                                       if (_errorMessage != null)
                                         Padding(
@@ -273,7 +278,9 @@ class _LoginPageState extends State<LoginPage> {
                                           ),
                                           child: DecoratedBox(
                                             decoration: BoxDecoration(
-                                              color: Colors.red.withOpacity(0.08),
+                                              color: Colors.red.withOpacity(
+                                                0.08,
+                                              ),
                                               borderRadius:
                                                   BorderRadius.circular(12),
                                               border: Border.all(
@@ -282,7 +289,9 @@ class _LoginPageState extends State<LoginPage> {
                                               ),
                                             ),
                                             child: Padding(
-                                              padding: const EdgeInsets.all(12.0),
+                                              padding: const EdgeInsets.all(
+                                                12.0,
+                                              ),
                                               child: Row(
                                                 children: [
                                                   const Icon(
@@ -303,9 +312,9 @@ class _LoginPageState extends State<LoginPage> {
                                             ),
                                           ),
                                         ),
-                                        
+
                                       const SizedBox(height: 8),
-                                      
+
                                       // TOMBOL LOGIN
                                       _isLoading
                                           ? const SizedBox(
@@ -316,13 +325,14 @@ class _LoginPageState extends State<LoginPage> {
                                               ),
                                             )
                                           : ElevatedButton(
-                                              onPressed:
-                                                  _isLoading ? null : _login,
+                                              onPressed: _isLoading
+                                                  ? null
+                                                  : _login,
                                               style: ElevatedButton.styleFrom(
                                                 padding:
                                                     const EdgeInsets.symmetric(
-                                                  vertical: 16,
-                                                ),
+                                                      vertical: 16,
+                                                    ),
                                                 shape: RoundedRectangleBorder(
                                                   borderRadius:
                                                       BorderRadius.circular(14),
@@ -341,9 +351,9 @@ class _LoginPageState extends State<LoginPage> {
                                                 ),
                                               ),
                                             ),
-                                      
+
                                       const SizedBox(height: 14),
-                                      
+
                                       // TOMBOL REGISTER
                                       OutlinedButton(
                                         onPressed: _isLoading
@@ -360,8 +370,9 @@ class _LoginPageState extends State<LoginPage> {
                                                 .withOpacity(0.6),
                                           ),
                                           shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(14),
+                                            borderRadius: BorderRadius.circular(
+                                              14,
+                                            ),
                                           ),
                                           foregroundColor: colorScheme.primary,
                                         ),
@@ -383,7 +394,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                 ),
-                
+
                 // TOMBOL BACK
                 Positioned(
                   top: 10,

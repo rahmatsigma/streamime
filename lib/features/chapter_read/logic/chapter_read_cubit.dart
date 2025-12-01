@@ -3,12 +3,16 @@ import 'package:manga_read/features/home/data/repositories/i_manga_repository.da
 
 // STATE SEDERHANA (Langsung disini aja biar cepet)
 abstract class ChapterReadState {}
+
 class ChapterReadInitial extends ChapterReadState {}
+
 class ChapterReadLoading extends ChapterReadState {}
+
 class ChapterReadError extends ChapterReadState {
   final String message;
   ChapterReadError(this.message);
 }
+
 class ChapterReadLoaded extends ChapterReadState {
   final List<String> images;
   ChapterReadLoaded(this.images);
@@ -23,7 +27,7 @@ class ChapterReadCubit extends Cubit<ChapterReadState> {
   void getImages(String chapterId) async {
     emit(ChapterReadLoading());
     final result = await _repo.getChapterImages(chapterId: chapterId);
-    
+
     result.fold(
       (failure) => emit(ChapterReadError(failure.message)),
       (images) => emit(ChapterReadLoaded(images)),

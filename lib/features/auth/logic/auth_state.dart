@@ -8,17 +8,11 @@ class AuthState extends Equatable {
   final AuthStatus status;
   final User? user; // Data pengguna dari Firebase
 
-  const AuthState({
-    this.status = AuthStatus.unknown,
-    this.user,
-  });
+  const AuthState({this.status = AuthStatus.unknown, this.user});
 
   // Helper copyWith
   AuthState copyWith({AuthStatus? status, User? user}) {
-    return AuthState(
-      status: status ?? this.status,
-      user: user ?? this.user,
-    );
+    return AuthState(status: status ?? this.status, user: user ?? this.user);
   }
 
   @override

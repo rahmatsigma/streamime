@@ -14,7 +14,7 @@ class ChapterReadPage extends StatelessWidget {
   final List<Map<String, dynamic>> chapters; // Terima daftar chapter
 
   const ChapterReadPage({
-    super.key, 
+    super.key,
     required this.chapterId,
     required this.chapters,
   });
@@ -22,9 +22,9 @@ class ChapterReadPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => ChapterReadCubit(
-        context.read<IMangaRepository>(),
-      )..getImages(chapterId),
+      create: (context) =>
+          ChapterReadCubit(context.read<IMangaRepository>())
+            ..getImages(chapterId),
       child: Scaffold(
         backgroundColor: Colors.black,
         appBar: AppBar(
@@ -32,7 +32,7 @@ class ChapterReadPage extends StatelessWidget {
           iconTheme: const IconThemeData(color: Colors.white),
           // Tampilkan Judul Chapter
           title: Text(
-            _getCurrentChapterTitle(), 
+            _getCurrentChapterTitle(),
             style: const TextStyle(color: Colors.white, fontSize: 16),
             overflow: TextOverflow.ellipsis,
           ),
@@ -46,7 +46,7 @@ class ChapterReadPage extends StatelessWidget {
                   style: const TextStyle(color: Colors.white54, fontSize: 12),
                 ),
               ),
-            )
+            ),
           ],
         ),
         body: BlocBuilder<ChapterReadCubit, ChapterReadState>(
@@ -56,14 +56,20 @@ class ChapterReadPage extends StatelessWidget {
             }
             if (state is ChapterReadError) {
               return Center(
-                  child: Text("Error: ${state.message}",
-                      style: const TextStyle(color: Colors.white)));
+                child: Text(
+                  "Error: ${state.message}",
+                  style: const TextStyle(color: Colors.white),
+                ),
+              );
             }
             if (state is ChapterReadLoaded) {
               if (state.images.isEmpty) {
                 return const Center(
-                    child: Text("Tidak ada gambar.",
-                        style: TextStyle(color: Colors.white)));
+                  child: Text(
+                    "Tidak ada gambar.",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                );
               }
 
               // --- FITUR ZOOM: InteractiveViewer ---
@@ -72,8 +78,8 @@ class ChapterReadPage extends StatelessWidget {
                 maxScale: 4.0, // Bisa zoom sampai 4x lipat
                 child: ListView.builder(
                   // Tambah 1 item di bawah untuk tombol navigasi
-                  itemCount: state.images.length + 1, 
-                  cacheExtent: 3000, 
+                  itemCount: state.images.length + 1,
+                  cacheExtent: 3000,
                   itemBuilder: (context, index) {
                     // Jika index terakhir, tampilkan Tombol Navigasi
                     if (index == state.images.length) {
@@ -94,7 +100,7 @@ class ChapterReadPage extends StatelessWidget {
                             child: CircularProgressIndicator(
                               value: progress.expectedTotalBytes != null
                                   ? progress.cumulativeBytesLoaded /
-                                      progress.expectedTotalBytes!
+                                        progress.expectedTotalBytes!
                                   : null,
                             ),
                           ),
@@ -103,7 +109,8 @@ class ChapterReadPage extends StatelessWidget {
                       errorBuilder: (_, __, ___) => const SizedBox(
                         height: 200,
                         child: Center(
-                            child: Icon(Icons.broken_image, color: Colors.grey)),
+                          child: Icon(Icons.broken_image, color: Colors.grey),
+                        ),
                       ),
                     );
                   },
@@ -120,7 +127,9 @@ class ChapterReadPage extends StatelessWidget {
   // Helper: Cari Index yang Aman (String vs Int)
   int _getCurrentIndex() {
     if (chapters.isEmpty) return -1;
-    return chapters.indexWhere((c) => c['id'].toString() == chapterId.toString());
+    return chapters.indexWhere(
+      (c) => c['id'].toString() == chapterId.toString(),
+    );
   }
 
   String _getCurrentChapterTitle() {
@@ -132,37 +141,42 @@ class ChapterReadPage extends StatelessWidget {
   }
 
   // Helper: Update History saat klik Next/Prev
-  Future<void> _updateHistory(BuildContext context, String targetChapterId, String targetChapterTitle) async {
+  Future<void> _updateHistory(
+    BuildContext context,
+    String targetChapterId,
+    String targetChapterTitle,
+  ) async {
     final authState = context.read<AuthCubit>().state;
     final repo = context.read<IMangaRepository>();
 
-    if (authState.status == AuthStatus.authenticated && authState.user != null) {
+    if (authState.status == AuthStatus.authenticated &&
+        authState.user != null) {
       final userId = authState.user!.uid;
-      
+
       // Cari data chapter target untuk ambil mangaId-nya
       final targetChapter = chapters.firstWhere(
-        (c) => c['id'].toString() == targetChapterId.toString(), 
-        orElse: () => {}
+        (c) => c['id'].toString() == targetChapterId.toString(),
+        orElse: () => {},
       );
-      
+
       final String mangaId = targetChapter['mangaId'] ?? '';
 
       if (mangaId.isNotEmpty && repo is MangaRepositoryImpl) {
-          try {
-            await FirebaseFirestore.instance
-                .collection('users')
-                .doc(userId)
-                .collection('history')
-                .doc(mangaId)
-                .update({ 
-                  'lastChapter': targetChapterTitle,
-                  'chapterId': targetChapterId,
-                  'lastReadAt': FieldValue.serverTimestamp(),
-            });
-            print("History updated: $targetChapterTitle");
-          } catch (e) {
-            print("Gagal update history next: $e");
-          }
+        try {
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(userId)
+              .collection('history')
+              .doc(mangaId)
+              .update({
+                'lastChapter': targetChapterTitle,
+                'chapterId': targetChapterId,
+                'lastReadAt': FieldValue.serverTimestamp(),
+              });
+          print("History updated: $targetChapterTitle");
+        } catch (e) {
+          print("Gagal update history next: $e");
+        }
       }
     }
   }
@@ -170,23 +184,28 @@ class ChapterReadPage extends StatelessWidget {
   // Widget: Tombol Next/Prev
   Widget _buildNavigationButtons(BuildContext context) {
     final currentIndex = _getCurrentIndex();
-    
+
     // Kalau list kosong atau ID gak ketemu, sembunyikan tombol
     if (chapters.isEmpty || currentIndex == -1) {
       return const Padding(
         padding: EdgeInsets.all(20.0),
-        child: Center(child: Text("Navigasi tidak tersedia", style: TextStyle(color: Colors.grey))),
+        child: Center(
+          child: Text(
+            "Navigasi tidak tersedia",
+            style: TextStyle(color: Colors.grey),
+          ),
+        ),
       );
     }
 
     Map<String, dynamic>? nextChapter;
     Map<String, dynamic>? prevChapter;
 
-    // Logika API 
+    // Logika API
     if (currentIndex > 0) {
       nextChapter = chapters[currentIndex - 1]; // Maju ke chapter lebih baru
     }
-    
+
     if (currentIndex < chapters.length - 1) {
       prevChapter = chapters[currentIndex + 1]; // Mundur ke chapter lama
     }
@@ -206,16 +225,23 @@ class ChapterReadPage extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
                 onPressed: () {
-                  _updateHistory(context, prevChapter!['id'], prevChapter!['title']);
-                  context.pushReplacement('/read/${prevChapter!['id']}', extra: chapters);
+                  _updateHistory(
+                    context,
+                    prevChapter!['id'],
+                    prevChapter!['title'],
+                  );
+                  context.pushReplacement(
+                    '/read/${prevChapter!['id']}',
+                    extra: chapters,
+                  );
                 },
                 icon: const Icon(Icons.arrow_back),
                 label: const Text("Prev"),
               ),
             )
           else
-            const Spacer(), 
-            
+            const Spacer(),
+
           const SizedBox(width: 16),
 
           if (nextChapter != null)
@@ -227,10 +253,17 @@ class ChapterReadPage extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
                 onPressed: () {
-                   _updateHistory(context, nextChapter!['id'], nextChapter!['title']);
-                   context.pushReplacement('/read/${nextChapter!['id']}', extra: chapters);
+                  _updateHistory(
+                    context,
+                    nextChapter!['id'],
+                    nextChapter!['title'],
+                  );
+                  context.pushReplacement(
+                    '/read/${nextChapter!['id']}',
+                    extra: chapters,
+                  );
                 },
-                label: const Text("Next"), 
+                label: const Text("Next"),
                 icon: const Icon(Icons.arrow_forward),
               ),
             )

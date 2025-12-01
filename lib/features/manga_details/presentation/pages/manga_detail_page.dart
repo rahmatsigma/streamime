@@ -15,14 +15,14 @@ class MangaDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authState = context.read<AuthCubit>().state;
-    final String? userId = (authState.status == AuthStatus.authenticated) 
-        ? authState.user?.uid 
+    final String? userId = (authState.status == AuthStatus.authenticated)
+        ? authState.user?.uid
         : null;
 
     return BlocProvider(
-      create: (context) => MangaDetailCubit(
-        context.read<IMangaRepository>(),
-      )..getMangaDetail(mangaId),
+      create: (context) =>
+          MangaDetailCubit(context.read<IMangaRepository>())
+            ..getMangaDetail(mangaId),
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Detail Manga'),
@@ -41,14 +41,17 @@ class MangaDetailPage extends StatelessWidget {
                 return IconButton(
                   icon: Icon(
                     isFav ? Icons.favorite : Icons.favorite_border,
-                    color: isFav ? Colors.redAccent : null, 
+                    color: isFav ? Colors.redAccent : null,
                   ),
                   onPressed: () {
                     final authState = context.read<AuthCubit>().state;
-                    final isLoggedIn = authState.status == AuthStatus.authenticated;
+                    final isLoggedIn =
+                        authState.status == AuthStatus.authenticated;
 
                     if (isLoggedIn && authState.user != null) {
-                      context.read<MangaDetailCubit>().toggleFavorite(authState.user!.uid);
+                      context.read<MangaDetailCubit>().toggleFavorite(
+                        authState.user!.uid,
+                      );
                     } else {
                       _showLoginRequiredDialog(context);
                     }
@@ -70,14 +73,23 @@ class MangaDetailPage extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                    const Icon(
+                      Icons.error_outline,
+                      size: 48,
+                      color: Colors.red,
+                    ),
                     const SizedBox(height: 16),
-                    Text('Error: ${state.message}', textAlign: TextAlign.center),
+                    Text(
+                      'Error: ${state.message}',
+                      textAlign: TextAlign.center,
+                    ),
                     const SizedBox(height: 16),
                     ElevatedButton(
-                      onPressed: () => context.read<MangaDetailCubit>().getMangaDetail(mangaId),
+                      onPressed: () => context
+                          .read<MangaDetailCubit>()
+                          .getMangaDetail(mangaId),
                       child: const Text("Coba Lagi"),
-                    )
+                    ),
                   ],
                 ),
               );
@@ -107,7 +119,7 @@ class MangaDetailPage extends StatelessWidget {
 
   Widget _buildMobileLayout(BuildContext context, Manga manga, String? userId) {
     final ScrollController scrollController = ScrollController();
-    
+
     return SingleChildScrollView(
       controller: scrollController,
       padding: const EdgeInsets.all(16.0),
@@ -122,9 +134,13 @@ class MangaDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildDesktopLayout(BuildContext context, Manga manga, String? userId) {
+  Widget _buildDesktopLayout(
+    BuildContext context,
+    Manga manga,
+    String? userId,
+  ) {
     final ScrollController scrollController = ScrollController();
-    
+
     return SingleChildScrollView(
       controller: scrollController,
       padding: const EdgeInsets.symmetric(horizontal: 48.0, vertical: 24.0),
@@ -133,7 +149,9 @@ class MangaDetailPage extends StatelessWidget {
         children: [
           _buildCoverImage(manga.imageUrl),
           const SizedBox(width: 32),
-          Expanded(child: _buildInfoSection(context, manga, userId, scrollController)),
+          Expanded(
+            child: _buildInfoSection(context, manga, userId, scrollController),
+          ),
         ],
       ),
     );
@@ -168,7 +186,12 @@ class MangaDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoSection(BuildContext context, Manga manga, String? userId, ScrollController scrollController) {
+  Widget _buildInfoSection(
+    BuildContext context,
+    Manga manga,
+    String? userId,
+    ScrollController scrollController,
+  ) {
     final textTheme = Theme.of(context).textTheme;
 
     return Column(
@@ -176,7 +199,9 @@ class MangaDetailPage extends StatelessWidget {
       children: [
         Text(
           manga.title,
-          style: textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+          style: textTheme.headlineMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         if (manga.titleEnglish != null) ...[
           const SizedBox(height: 4),
@@ -185,12 +210,13 @@ class MangaDetailPage extends StatelessWidget {
             style: textTheme.titleMedium?.copyWith(color: Colors.grey),
           ),
         ],
-        
+
         const SizedBox(height: 16),
 
         Row(
           children: [
-            if (manga.status != null) _buildBadge(context, manga.status!, Colors.green),
+            if (manga.status != null)
+              _buildBadge(context, manga.status!, Colors.green),
             if (manga.type != null) ...[
               const SizedBox(width: 8),
               _buildBadge(context, manga.type!, Colors.blue),
@@ -205,11 +231,15 @@ class MangaDetailPage extends StatelessWidget {
         Wrap(
           spacing: 8.0,
           runSpacing: 8.0,
-          children: manga.genres.map((genre) => Chip(
-            label: Text(genre),
-            padding: const EdgeInsets.all(0),
-            visualDensity: VisualDensity.compact,
-          )).toList(),
+          children: manga.genres
+              .map(
+                (genre) => Chip(
+                  label: Text(genre),
+                  padding: const EdgeInsets.all(0),
+                  visualDensity: VisualDensity.compact,
+                ),
+              )
+              .toList(),
         ),
 
         const SizedBox(height: 24),
@@ -237,23 +267,26 @@ class MangaDetailPage extends StatelessWidget {
                 SizedBox(height: 8),
                 Text(
                   'Sinopsis belum tersedia untuk komik ini.',
-                  style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontStyle: FontStyle.italic,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ],
             ),
           ),
 
-      const SizedBox(height: 24),
+        const SizedBox(height: 24),
         const Divider(thickness: 1, color: Colors.white24),
         const SizedBox(height: 16),
-        
+
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Daftar Chapter (${manga.chapterList.length})', 
-              style: textTheme.titleLarge
+              'Daftar Chapter (${manga.chapterList.length})',
+              style: textTheme.titleLarge,
             ),
             if (manga.chapterList.isNotEmpty)
               OutlinedButton.icon(
@@ -268,7 +301,10 @@ class MangaDetailPage extends StatelessWidget {
                 icon: const Icon(Icons.arrow_drop_down_rounded, size: 20),
                 label: const Text('Ke Chapter 1'),
                 style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   side: const BorderSide(color: Colors.white54),
                 ),
               ),
@@ -280,13 +316,13 @@ class MangaDetailPage extends StatelessWidget {
           const Padding(
             padding: EdgeInsets.all(16.0),
             child: Text(
-              "Belum ada chapter yang tersedia.", 
-              style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic)
+              "Belum ada chapter yang tersedia.",
+              style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
             ),
           )
         else
           ListView.builder(
-            shrinkWrap: true, 
+            shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: manga.chapterList.length,
             itemBuilder: (context, index) {
@@ -294,7 +330,9 @@ class MangaDetailPage extends StatelessWidget {
               return Card(
                 color: Colors.grey.withOpacity(0.05),
                 margin: const EdgeInsets.symmetric(vertical: 4),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
                 child: ListTile(
                   title: Text(
                     chapter['title'],
@@ -302,10 +340,17 @@ class MangaDetailPage extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  subtitle: chapter['date'] != null 
-                    ? Text(chapter['date'], style: const TextStyle(fontSize: 12)) 
-                    : null,
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.white54),
+                  subtitle: chapter['date'] != null
+                      ? Text(
+                          chapter['date'],
+                          style: const TextStyle(fontSize: 12),
+                        )
+                      : null,
+                  trailing: const Icon(
+                    Icons.arrow_forward_ios,
+                    size: 14,
+                    color: Colors.white54,
+                  ),
                   onTap: () {
                     context.read<MangaDetailCubit>().saveHistoryIfLoggedIn(
                       userId,
@@ -314,17 +359,17 @@ class MangaDetailPage extends StatelessWidget {
                     );
 
                     print("Navigasi ke chapter ID: ${chapter['id']}");
-                    
+
                     context.push(
-                      '/read/${chapter['id']}', 
-                      extra: manga.chapterList, 
+                      '/read/${chapter['id']}',
+                      extra: manga.chapterList,
                     );
                   },
                 ),
               );
             },
           ),
-          
+
         const SizedBox(height: 40),
       ],
     );
@@ -340,7 +385,11 @@ class MangaDetailPage extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12),
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
+        ),
       ),
     );
   }
@@ -350,7 +399,9 @@ class MangaDetailPage extends StatelessWidget {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text("Login Diperlukan"),
-        content: const Text("Kamu harus login untuk menambahkan manga ke favorit."),
+        content: const Text(
+          "Kamu harus login untuk menambahkan manga ke favorit.",
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),

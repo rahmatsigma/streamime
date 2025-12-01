@@ -27,7 +27,7 @@ class ReadingHistoryPage extends StatelessWidget {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
-                
+
                 final historyList = snapshot.data ?? [];
 
                 if (historyList.isEmpty) {
@@ -37,7 +37,10 @@ class ReadingHistoryPage extends StatelessWidget {
                       children: [
                         Icon(Icons.history, size: 60, color: Colors.grey),
                         SizedBox(height: 16),
-                        Text('Belum ada history baca.', style: TextStyle(color: Colors.grey)),
+                        Text(
+                          'Belum ada history baca.',
+                          style: TextStyle(color: Colors.grey),
+                        ),
                       ],
                     ),
                   );
@@ -96,7 +99,10 @@ class ReadingHistoryPage extends StatelessWidget {
                 children: [
                   Text(
                     data['title'] ?? 'Tanpa Judul',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -108,7 +114,10 @@ class ReadingHistoryPage extends StatelessWidget {
                       Expanded(
                         child: Text(
                           "Terakhir: ${data['lastChapter'] ?? '-'}",
-                          style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.w500),
+                          style: const TextStyle(
+                            color: Colors.blue,
+                            fontWeight: FontWeight.w500,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -122,15 +131,19 @@ class ReadingHistoryPage extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: IconButton(
-                icon: const Icon(Icons.play_circle_fill, size: 32, color: Colors.blue),
+                icon: const Icon(
+                  Icons.play_circle_fill,
+                  size: 32,
+                  color: Colors.blue,
+                ),
                 onPressed: () {
-                   // Logic sama persis dengan onTap
-                   final String? chapterId = data['chapterId'];
-                   if (chapterId != null && chapterId.isNotEmpty) {
-                     context.push('/read/$chapterId');
-                   } else {
-                     context.push('/manga-detail/${data['mangaId']}');
-                   }
+                  // Logic sama persis dengan onTap
+                  final String? chapterId = data['chapterId'];
+                  if (chapterId != null && chapterId.isNotEmpty) {
+                    context.push('/read/$chapterId');
+                  } else {
+                    context.push('/manga-detail/${data['mangaId']}');
+                  }
                 },
               ),
             ),

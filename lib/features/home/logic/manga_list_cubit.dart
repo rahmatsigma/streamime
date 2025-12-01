@@ -8,7 +8,7 @@ class MangaListCubit extends Cubit<MangaListState> {
   bool _isFetching = false;
 
   MangaListCubit(this._repository) : super(MangaListInitial()) {
-    fetchPopularManga(); 
+    fetchPopularManga();
   }
 
   Future<void> getPopularManga({required int page}) async {
@@ -27,10 +27,9 @@ class MangaListCubit extends Cubit<MangaListState> {
 
     result.fold(
       (failure) => emit(MangaListError(failure.message)),
-      (mangaList) => emit(MangaListLoaded(
-        mangaList: mangaList,
-        hasReachedMax: mangaList.isEmpty,
-      )),
+      (mangaList) => emit(
+        MangaListLoaded(mangaList: mangaList, hasReachedMax: mangaList.isEmpty),
+      ),
     );
     _isFetching = false;
   }
@@ -38,7 +37,9 @@ class MangaListCubit extends Cubit<MangaListState> {
   // Fungsi untuk mengambil data selanjutnya (Infinite Scroll)
   Future<void> loadMoreManga() async {
     // Jangan lakukan apapun jika sedang fetching atau data sudah habis
-    if (_isFetching || (state is MangaListLoaded && (state as MangaListLoaded).hasReachedMax)) {
+    if (_isFetching ||
+        (state is MangaListLoaded &&
+            (state as MangaListLoaded).hasReachedMax)) {
       return;
     }
 
@@ -48,29 +49,33 @@ class MangaListCubit extends Cubit<MangaListState> {
       _isFetching = true;
       emit(currentState.copyWith(isLoadingMore: true));
 
-      _currentPage++; 
+      _currentPage++;
       final result = await _repository.getPopularManga(page: _currentPage);
 
       result.fold(
         (failure) {
-          emit(currentState.copyWith(
-            isLoadingMore: false,
-          ));
+          emit(currentState.copyWith(isLoadingMore: false));
         },
         (newMangaList) {
-          emit(currentState.copyWith(
-            mangaList: currentState.mangaList + newMangaList,
-            hasReachedMax: newMangaList.isEmpty, 
-            isLoadingMore: false,
-          ));
+          emit(
+            currentState.copyWith(
+              mangaList: currentState.mangaList + newMangaList,
+              hasReachedMax: newMangaList.isEmpty,
+              isLoadingMore: false,
+            ),
+          );
         },
       );
       _isFetching = false;
     }
   }
 
-  // Fungsi Pencarian 
-  Future<void> searchManga(String query, {String? filterType, String? filterStatus}) async {
+  // Fungsi Pencarian
+  Future<void> searchManga(
+    String query, {
+    String? filterType,
+    String? filterStatus,
+  }) async {
     if (query.isEmpty) {
       await fetchPopularManga();
       return;
@@ -81,32 +86,33 @@ class MangaListCubit extends Cubit<MangaListState> {
 
     final result = await _repository.searchManga(query: query);
 
-    result.fold(
-      (failure) => emit(MangaListError(failure.message)),
-      (mangaList) {
-        var filteredList = mangaList;
+    result.fold((failure) => emit(MangaListError(failure.message)), (
+      mangaList,
+    ) {
+      var filteredList = mangaList;
 
-        if (filterType != null && filterType != 'All') {
-          filteredList = filteredList.where((manga) {
-            final type = manga['type']?.toString().toLowerCase() ?? '';
-            return type == filterType.toLowerCase();
-          }).toList();
-        }
+      if (filterType != null && filterType != 'All') {
+        filteredList = filteredList.where((manga) {
+          final type = manga['type']?.toString().toLowerCase() ?? '';
+          return type == filterType.toLowerCase();
+        }).toList();
+      }
 
-        if (filterStatus != null && filterStatus != 'All') {
-          filteredList = filteredList.where((manga) {
-            final status = manga['status']?.toString().toLowerCase() ?? '';
-            return status.contains(filterStatus.toLowerCase());
-          }).toList();
-        }
+      if (filterStatus != null && filterStatus != 'All') {
+        filteredList = filteredList.where((manga) {
+          final status = manga['status']?.toString().toLowerCase() ?? '';
+          return status.contains(filterStatus.toLowerCase());
+        }).toList();
+      }
 
-        emit(MangaListLoaded(
+      emit(
+        MangaListLoaded(
           mangaList: filteredList,
           hasReachedMax: true,
           isLoadingMore: false,
-        ));
-      },
-    );
+        ),
+      );
+    });
     _isFetching = false;
   }
 }
